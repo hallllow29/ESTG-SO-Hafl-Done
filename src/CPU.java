@@ -2,6 +2,8 @@ import lib.exceptions.EmptyCollectionException;
 import lib.queues.LinkedQueue;
 public class CPU {
 
+	private final static long TIME_SLICE = 1000;
+
 	// CPU has a taskLinkedQueue of tasks to be executed
 	private LinkedQueue<Task> taskLinkedQueue;
 	private boolean isAvailable;
@@ -119,7 +121,47 @@ public class CPU {
 			}
 		}
 	}
+
+	public synchronized void schedulePreemptive() {
+
+		if (!this.isRunning) {
+			System.out.println("CPU IS NOT RUNNING");
+			return;
+		}
+
+		if (taskLinkedQueue.isEmpty()) {
+			System.out.println("taskLinkedQueue is empty");
+			return;
+		}
+
+		while (!taskLinkedQueue.isEmpty()) {
+			try {
+				Task nextTask = taskLinkedQueue.dequeue();
+				nextTask.setStatus(Status.RUNNING);
+				System.out.println("TASK " + nextTask.getName() + " with Priority: " + nextTask.getPriority() + " is " + nextTask.getStatus());
+
+				long duration = nextTask.getDuration();
+
+				if (duration < TIME_SLICE) {
+					Thread.sleep(duration);
+					nextTask.setStatus(Status.COMPLETED);
+					System.out.println("TASK " + nextTask.getName() + " is " + nextTask.getStatus());
+				} else {
+					Thread.sleep(TIME_SLICE);
+					// TODO: Pause the Task
+				}
+
+			} catch (EmptyCollectionException | InterruptedException e) {
+				System.err.println(e.getMessage());
+				break;
+			}
+
+		}
+	}
 }
 
 // Do we need now scheduling algorithms?
-// TODO: Preemptive Scheduling.
+// TODO: Preemptive Scheduling
+// TODO: Modify CPU class for preemptive scheduling
+// TODO: Add logic to interrupt after expiration of certain time
+// TODO: Re-schedule Task that were interrupted
