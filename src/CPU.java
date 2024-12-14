@@ -122,4 +122,4 @@ public class CPU {
 }
 
 // Do we need now scheduling algorithms?
-// TODO: First Come, First Served (FCFS) scheduling.
+// TODO: Preemptive Scheduling.
