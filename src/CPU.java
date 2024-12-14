@@ -2,7 +2,7 @@ import lib.exceptions.EmptyCollectionException;
 import lib.queues.LinkedQueue;
 public class CPU {
 
-
+	// CPU has a taskLinkedQueue of tasks to be executed
 	private LinkedQueue<Task> taskLinkedQueue;
 	private boolean isAvailable;
 	private boolean isRunning;
