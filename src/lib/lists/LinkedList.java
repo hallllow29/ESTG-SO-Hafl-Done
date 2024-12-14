@@ -1,11 +1,3 @@
-/**
- * @author 8230069
- * @file LinkedList.java
- * @copyright ESTG IPP
- * @brief ED, Ficha Prática 7, Exercicio 1
- * @date 2024/11/02
- **/
-
 package lib.lists;
 import lib.exceptions.ElementNotFoundException;
 import lib.exceptions.EmptyCollectionException;
