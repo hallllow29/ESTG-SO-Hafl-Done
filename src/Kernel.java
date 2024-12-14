@@ -3,6 +3,8 @@ import lib.lists.LinkedList;
 
 public class Kernel {
 
+
+	private CPU cpu;
 	LinkedList<Task> taskLinkedList;
 	boolean isRunning;
 	private final int MAX_TASK_CAPACITY = 100;
@@ -10,6 +12,7 @@ public class Kernel {
 	public Kernel() {
 		// TODO: CPU, MEMORY, DEVICES, SERVER
 		this.taskLinkedList = new LinkedList<Task>();
+		this.cpu = new CPU();
 		this.isRunning = true;
 	}
 
@@ -28,6 +31,8 @@ public class Kernel {
 
 		System.out.println("KERNEL STARTING...");
 
+		cpu.start();
+
 		isRunning = true;
 		System.out.println("KERNEL STARTED");
 	}
@@ -39,7 +44,8 @@ public class Kernel {
 		}
 
 		System.out.println("KERNEL STOPPING...");
-		// TODO: CPU, MEMORY, DEVICES, SERVER
+		// TODO: MEMORY, DEVICES, SERVER
+		cpu.stop();
 		isRunning = false;
 		System.out.println("KERNEL STOPPED");
 	}
@@ -69,11 +75,22 @@ public class Kernel {
 
 	private void validateRessources(Task task) {
 
+		if (!cpu.isAvailable()) {
+			System.out.println("CPU IS NOT AVAILABLE");
+		}
+
 		// TODO: validate Memory resource for a Task
 
-		// TODO: validate CPU resource for a Task
 
 		// TODO: validate Devices resource for a task
+
+	}
+
+	private void executeOneTask(Task task) {
+
+		task.setStatus(Status.RUNNING);
+
+		// TODO: Execute task? maybe cpu.excuteTask(task)
 
 	}
 
