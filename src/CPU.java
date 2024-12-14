@@ -134,14 +134,14 @@ public class CPU {
 			return;
 		}
 
-		if (taskLinkedQueue.isEmpty()) {
-			System.out.println("taskLinkedQueue is empty");
+		if (this.taskPriorityQueue.isEmpty()) {
+			System.out.println("taskPriorityQueue is empty");
 			return;
 		}
 
-		while (!taskLinkedQueue.isEmpty()) {
+		while (!this.taskPriorityQueue.isEmpty()) {
 			try {
-				Task nextTask = taskLinkedQueue.dequeue();
+				Task nextTask = this.taskPriorityQueue.removeElement();
 				nextTask.setStatus(Status.RUNNING);
 				System.out.println("TASK " + nextTask.getName() + " with Priority: " + nextTask.getPriority() + " is " + nextTask.getStatus());
 
@@ -157,7 +157,7 @@ public class CPU {
 					nextTask.setDuration(duration - TIME_SLICE);
 					nextTask.setStatus(Status.PAUSED);
 					System.out.println("TASK " + nextTask.getName() + " is " + nextTask.getStatus() + " with a duration: " + nextTask.getDuration() +"ms");
-					taskLinkedQueue.enqueue(nextTask);
+					this.taskPriorityQueue.addElement(nextTask, nextTask.getPriority());
 				}
 
 			} catch (EmptyCollectionException | InterruptedException e) {
@@ -166,6 +166,20 @@ public class CPU {
 			}
 
 		}
+	}
+
+	public synchronized void scheduleSFJ() {
+		if (!this.isRunning) {
+			System.out.println("CPU IS NOT RUNNING");
+			return;
+		}
+
+		if (taskPriorityQueue.isEmpty()) {
+			System.out.println("taskLinkedQueue is empty");
+			return;
+		}
+
+
 	}
 }
 
