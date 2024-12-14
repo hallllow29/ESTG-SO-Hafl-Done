@@ -48,7 +48,7 @@ public class CPU {
 		System.out.println("CPU STOPPED");
 	}
 
-	public void excuteTask(Task task) {
+	public void executeTask(Task task) {
 
 		if (!this.isRunning) {
 			System.out.println("CPU IS NOT RUNNING");

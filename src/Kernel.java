@@ -1,3 +1,4 @@
+import lib.exceptions.EmptyCollectionException;
 import lib.exceptions.NotElementComparableException;
 import lib.lists.LinkedList;
 
@@ -90,8 +91,34 @@ public class Kernel {
 
 		task.setStatus(Status.RUNNING);
 
-		// TODO: Execute task? maybe cpu.excuteTask(task)
+		cpu.executeTask(task);
 
+		task.setStatus(Status.COMPLETED);
+
+	}
+
+	private boolean taskValid(Task task) {
+
+		if (task == null) {
+			System.out.println("TASK CANNOT BE NULL");
+			return false;
+		}
+
+		try {
+			if (taskDuplicate(task)) {
+				System.out.println("TASK CANNOT BE A DUPLICATE");
+				return false;
+			}
+		} catch (EmptyCollectionException e) {
+			System.out.println(e.getMessage());
+		}
+
+		return true;
+
+	}
+
+	private boolean taskDuplicate(Task task) throws EmptyCollectionException {
+		return this.taskLinkedList.contains(task);
 	}
 
 }
