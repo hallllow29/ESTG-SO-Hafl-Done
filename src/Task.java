@@ -1,4 +1,4 @@
-public class Task {
+public class Task implements Comparable<Task> {
 
 	private final String name;
 	private int priority;
@@ -38,5 +38,10 @@ public class Task {
 
 	public void setStatus(Status status) {
 		this.status = status;
+	}
+
+	@Override
+	public int compareTo(Task other) {
+		return Long.compare(this.duration, other.getDuration());
 	}
 }

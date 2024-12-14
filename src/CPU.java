@@ -1,4 +1,6 @@
 import lib.exceptions.EmptyCollectionException;
+import lib.exceptions.NotElementComparableException;
+import lib.lists.LinkedOrderedList;
 import lib.queues.LinkedQueue;
 import lib.trees.PriorityQueue;
 import lib.lists.LinkedList;
@@ -177,6 +179,29 @@ public class CPU {
 		if (taskPriorityQueue.isEmpty()) {
 			System.out.println("taskLinkedQueue is empty");
 			return;
+		}
+
+		LinkedOrderedList<Task> taskLinkedOrderedList = new LinkedOrderedList<Task>();
+
+		while(!this.taskLinkedQueue.isEmpty()) {
+			try {
+				Task nextTask = this.taskLinkedQueue.dequeue();
+				nextTask.setStatus(Status.READY);
+
+				System.out.println("TASK " + nextTask.getName() +
+					" is " + nextTask.getStatus() +
+					" with a duration: " + nextTask.getDuration() + "ms");
+
+				taskLinkedOrderedList.add(nextTask);
+			} catch (EmptyCollectionException | NotElementComparableException e) {
+				System.err.println(e.getMessage());
+			}
+		}
+
+		for ( Task nextTask : taskLinkedOrderedList) {
+			System.out.println("TASK " + nextTask.getName() +
+				" is " + nextTask.getStatus());
+			executeTask(nextTask);
 		}
 
 
