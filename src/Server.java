@@ -6,10 +6,12 @@ public class Server {
     private boolean isRunning;
     private static final Logger logger = Logger.getLogger(Server.class.getName());
     private final HashMap<String, Service> services;
+    private final HashMap<String, Device> devices;
 
     public Server() {
         this.isRunning = false;
         this.services = new HashMap<String, Service>();
+        this.devices = new HashMap<String, Device>();
     }
 
     public synchronized void start() {
@@ -96,5 +98,33 @@ public class Server {
         for (Service service : this.services.values()) {
             service.stop();
         }
+    }
+
+    public synchronized void addDevice(String name, Device device) {
+        if (this.devices.putIfAbsent(name, device) != null) {
+            logger.warning("Device " + name + " already exists");
+        } else {
+            logger.info("Device " + name + " added");
+        }
+    }
+
+    public synchronized void startDevice(String name) {
+        Device device = this.devices.get(name);
+        if (device == null) {
+            logger.warning("Device " + name + " does not exist");
+            return;
+        }
+        device.connect();
+        logger.info("Device " + name + " connected");
+    }
+
+    public synchronized void stopDevice(String name) {
+        Device device = this.devices.get(name);
+        if (device == null) {
+            logger.warning("Device " + name + " does not exist");
+            return;
+        }
+        device.disconnect();
+        logger.info("Device " + name + " disconnected");
     }
 }

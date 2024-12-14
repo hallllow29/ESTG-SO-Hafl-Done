@@ -48,4 +48,8 @@ public class Device {
     public boolean isBusy() {
         return this.busy;
     }
+
+    public DeviceType getType() {
+        return this.type;
+    }
 }
