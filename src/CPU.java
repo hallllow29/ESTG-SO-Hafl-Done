@@ -55,7 +55,7 @@ public class CPU {
 		System.out.println("CPU STOPPED");
 	}
 
-	public void executeTask(Task task) {
+	public synchronized void executeTask(Task task) {
 
 		if (!this.isRunning) {
 			System.out.println("CPU IS NOT RUNNING");
@@ -82,7 +82,7 @@ public class CPU {
 		isAvailable = true;
 	}
 
-	public void scheduleTask(Task task) {
+	public synchronized void scheduleTask(Task task) {
 
 		if (!this.isRunning) {
 			System.out.println("CPU IS NOT RUNNING");
@@ -93,7 +93,7 @@ public class CPU {
 
 	}
 
-	public void scheduleFCFS() {
+	public synchronized void scheduleFCFS() {
 
 		if (!this.isRunning) {
 			System.out.println("CPU IS NOT RUNNING");
@@ -118,8 +118,6 @@ public class CPU {
 				break;
 			}
 		}
-
-
 	}
 }
 
