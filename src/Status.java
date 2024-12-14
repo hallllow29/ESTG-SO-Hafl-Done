@@ -1,5 +1,7 @@
 public enum Status {
-	WAITING,
+	READY,
 	RUNNING,
+	PAUSED,
+	WAITING,
 	COMPLETED;
 }
