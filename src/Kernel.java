@@ -89,6 +89,11 @@ public class Kernel {
 
 	private void executeOneTask(Task task) {
 
+		if (!taskValid(task)) {
+			System.out.println("TASK IS NOT VALID");
+			return;
+		}
+
 		task.setStatus(Status.RUNNING);
 
 		cpu.executeTask(task);
@@ -123,5 +128,4 @@ public class Kernel {
 
 }
 
-// TODO: validate resources for a Task.
 // TODO: when adding a Task, validate if the system is running, then validate the Task itself and if it fits the Kernel resources.
