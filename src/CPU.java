@@ -1,10 +1,14 @@
 import lib.exceptions.EmptyCollectionException;
 import lib.queues.LinkedQueue;
+import lib.trees.PriorityQueue;
+import lib.lists.LinkedList;
+
 public class CPU {
 
 	private final static long TIME_SLICE = 1000;
 
 	// CPU has a taskLinkedQueue of tasks to be executed
+	private PriorityQueue<Task> taskPriorityQueue;
 	private LinkedQueue<Task> taskLinkedQueue;
 	private boolean isAvailable;
 	private boolean isRunning;
@@ -12,6 +16,7 @@ public class CPU {
 
 	public CPU() {
 		this.taskLinkedQueue = new LinkedQueue<Task>();
+		this.taskPriorityQueue = new PriorityQueue<Task>();
 		this.isRunning = false;
 		this.isAvailable = true;
 	}
@@ -90,8 +95,8 @@ public class CPU {
 			System.out.println("CPU IS NOT RUNNING");
 		}
 
-		System.out.println("SCHEDULING TASK: " + task.getName());
-		taskLinkedQueue.enqueue(task);
+		System.out.println("SCHEDULING TASK: " + task.getName() + " with priority: " + task.getPriority());
+		taskPriorityQueue.addElement(task, task.getPriority());
 
 	}
 
@@ -149,6 +154,10 @@ public class CPU {
 				} else {
 					Thread.sleep(TIME_SLICE);
 					// TODO: Pause the Task
+					nextTask.setDuration(duration - TIME_SLICE);
+					nextTask.setStatus(Status.PAUSED);
+					System.out.println("TASK " + nextTask.getName() + " is " + nextTask.getStatus() + " with a duration: " + nextTask.getDuration() +"ms");
+					taskLinkedQueue.enqueue(nextTask);
 				}
 
 			} catch (EmptyCollectionException | InterruptedException e) {
@@ -161,7 +170,5 @@ public class CPU {
 }
 
 // Do we need now scheduling algorithms?
-// TODO: Preemptive Scheduling
-// TODO: Modify CPU class for preemptive scheduling
-// TODO: Add logic to interrupt after expiration of certain time
-// TODO: Re-schedule Task that were interrupted
+// TODO: TIME_SLICE static or dynamic? (static = is fixed) (dynamic = is flexible) Thinking...
+// TODO: Shortest-Job-First algorithm for scheduling.
