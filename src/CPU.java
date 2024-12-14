@@ -14,6 +14,10 @@ public class CPU {
 	}
 
 
+	public boolean isReady() {
+		return !isRunning && isAvailable;
+	}
+
 	public boolean isAvailable() {
 		return this.isRunning && this.isAvailable;
 	}
@@ -44,6 +48,7 @@ public class CPU {
 
 		System.out.println("CPU STOPPING");
 
+		isAvailable = false;
 		isRunning = false;
 		System.out.println("CPU STOPPED");
 	}
@@ -65,6 +70,17 @@ public class CPU {
 
 		// CPU is not busy anymore
 		isAvailable = true;
+	}
+
+	public void scheduleTask(Task task) {
+
+		if (!this.isRunning) {
+			System.out.println("CPU IS NOT RUNNING");
+		}
+
+		System.out.println("SCHEDULING TASK: " + task.getName());
+		taskLinkedQueue.enqueue(task);
+
 	}
 
 	/*public void firstComeFirstServed() {
