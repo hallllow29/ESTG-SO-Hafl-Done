@@ -1,4 +1,4 @@
-public class Task implements Comparable<Task> {
+public class Task implements Comparable<Task>, Runnable {
 
 	private final String name;
 	private int priority;
@@ -9,6 +9,7 @@ public class Task implements Comparable<Task> {
 		this.name = name;
 		this.priority = priority;
 		this.duration = duration;
+		// Each task has WAITING status as default value
 		this.status = Status.WAITING;
 	}
 
@@ -43,5 +44,22 @@ public class Task implements Comparable<Task> {
 	@Override
 	public int compareTo(Task other) {
 		return Long.compare(this.duration, other.getDuration());
+	}
+
+	@Override
+	public void run() {
+		this.status = Status.RUNNING;
+		System.out.println("TASK " + this.name + " STARTED");
+
+		try {
+			Thread.sleep(this.duration);
+		} catch (InterruptedException e) {
+			this.status = Status.PAUSED;
+			System.err.println("TASK " + this.name + " PAUSED");
+			return;
+		}
+
+		this.status = Status.COMPLETED;
+		System.out.println("TASK " + this.name + " COMPLETED");
 	}
 }

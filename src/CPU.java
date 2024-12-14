@@ -3,7 +3,8 @@ import lib.exceptions.NotElementComparableException;
 import lib.lists.LinkedOrderedList;
 import lib.queues.LinkedQueue;
 import lib.trees.PriorityQueue;
-import lib.lists.LinkedList;
+
+import java.util.Iterator;
 
 public class CPU {
 
@@ -14,15 +15,15 @@ public class CPU {
 	private LinkedQueue<Task> taskLinkedQueue;
 	private boolean isAvailable;
 	private boolean isRunning;
-
+	private int completedTasks;
 
 	public CPU() {
 		this.taskLinkedQueue = new LinkedQueue<Task>();
 		this.taskPriorityQueue = new PriorityQueue<Task>();
 		this.isRunning = false;
 		this.isAvailable = true;
+		this.completedTasks = 0;
 	}
-
 
 	public boolean isReady() {
 		return !isRunning && isAvailable;
@@ -64,31 +65,81 @@ public class CPU {
 		System.out.println("CPU STOPPED");
 	}
 
-	public synchronized void executeTask(Task task) {
+	public synchronized void executeTaskDuration(Task task, long duration) {
+
+		if (task == null) {
+			System.out.println("TASK CANNOT BE NULL");
+			return;
+		}
 
 		if (!this.isRunning) {
 			System.out.println("CPU IS NOT RUNNING");
-			return;		}
+			return;
+		}
 
 		// CPU gets busy
 		isAvailable = false;
 
-		System.out.println("CPU EXECUTING TASK " + task.getName());
+		System.out.println("CPU " + Thread.currentThread().getName() + " EXECUTING TASK " + task.getName());
 		task.setStatus(Status.RUNNING);
 
 		try {
-			// Sleep the task for one second...
-			Thread.sleep(1000);
+			// Sleep the thread for a certain duration...
+			Thread.sleep(duration);
 		} catch (InterruptedException e) {
-			System.err.println(e.getMessage());
+			task.setStatus(Status.PAUSED);
+			System.err.println("CPU " + Thread.currentThread().getName() + " PAUSED TASK " + task.getName());
+		} finally {
+			// Even if Task gets interrupted
+			this.isAvailable = true;
+
+		}
+
+		if (task.getStatus() != Status.PAUSED) {
+			task.setStatus(Status.COMPLETED);
+			System.out.println("CPU COMPLETED TASK " + task.getName());
+			this.completedTasks++;
+		}
+
+	}
+
+	public synchronized void executeTask(Task task) {
+
+		if (task == null) {
+			System.out.println("TASK CANNOT BE NULL");
 			return;
 		}
 
-		task.setStatus(Status.COMPLETED);
-		System.out.println("CPU COMPLETED TASK " + task.getName());
+		if (!this.isRunning) {
+			System.out.println("CPU IS NOT RUNNING");
+			return;
+		}
 
-		// CPU is not busy anymore
-		isAvailable = true;
+
+		// CPU gets busy
+		this.isAvailable = false;
+
+		System.out.println("CPU " + Thread.currentThread().getName() + " EXECUTING TASK " + task.getName());
+		task.setStatus(Status.RUNNING);
+
+		try {
+			// Sleep the thread for a second...
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			task.setStatus(Status.PAUSED);
+			System.err.println("CPU " + Thread.currentThread().getName() + " PAUSED TASK " + task.getName());
+			System.err.println(e.getMessage());
+		} finally {
+			// Even if Task gets interrupted
+			this.isAvailable = true;
+			System.out.println("CPU IS NOT BUSY");
+		}
+
+		if (task.getStatus() != Status.PAUSED) {
+			task.setStatus(Status.COMPLETED);
+			System.out.println("CPU COMPLETED TASK " + task.getName());
+			this.completedTasks++;
+		}
 	}
 
 	public synchronized void scheduleTask(Task task) {
@@ -158,7 +209,7 @@ public class CPU {
 					// TODO: Pause the Task
 					nextTask.setDuration(duration - TIME_SLICE);
 					nextTask.setStatus(Status.PAUSED);
-					System.out.println("TASK " + nextTask.getName() + " is " + nextTask.getStatus() + " with a duration: " + nextTask.getDuration() +"ms");
+					System.out.println("TASK " + nextTask.getName() + " is " + nextTask.getStatus() + " with a duration: " + nextTask.getDuration() + "ms");
 					this.taskPriorityQueue.addElement(nextTask, nextTask.getPriority());
 				}
 
@@ -171,21 +222,23 @@ public class CPU {
 	}
 
 	public synchronized void scheduleSFJ() {
+
 		if (!this.isRunning) {
 			System.out.println("CPU IS NOT RUNNING");
 			return;
 		}
 
-		if (taskPriorityQueue.isEmpty()) {
+		if (taskLinkedQueue.isEmpty()) {
 			System.out.println("taskLinkedQueue is empty");
 			return;
 		}
 
 		LinkedOrderedList<Task> taskLinkedOrderedList = new LinkedOrderedList<Task>();
+		Task nextTask = null;
 
-		while(!this.taskLinkedQueue.isEmpty()) {
+		while (!this.taskLinkedQueue.isEmpty()) {
 			try {
-				Task nextTask = this.taskLinkedQueue.dequeue();
+				nextTask = this.taskLinkedQueue.dequeue();
 				nextTask.setStatus(Status.READY);
 
 				System.out.println("TASK " + nextTask.getName() +
@@ -198,16 +251,60 @@ public class CPU {
 			}
 		}
 
-		for ( Task nextTask : taskLinkedOrderedList) {
+		Iterator<Task> taskLinkedOrderedListIterator = taskLinkedOrderedList.iterator();
+
+		while (taskLinkedOrderedListIterator.hasNext()) {
+			nextTask = taskLinkedOrderedListIterator.next();
+			taskLinkedOrderedListIterator.remove();
 			System.out.println("TASK " + nextTask.getName() +
 				" is " + nextTask.getStatus());
 			executeTask(nextTask);
 		}
+	}
 
+	public synchronized void scheduleRR() {
 
+		if (!this.isRunning) {
+			System.out.println("CPU IS NOT RUNNING");
+			return;
+		}
+
+		if (taskLinkedQueue.isEmpty()) {
+			System.out.println("taskLinkedQueue is empty");
+			return;
+		}
+
+		Task nextTask = null;
+
+		while (!taskLinkedQueue.isEmpty()) {
+			try {
+				nextTask = taskLinkedQueue.dequeue();
+				nextTask.setStatus(Status.RUNNING);
+				System.out.println("TASK " + nextTask.getName() + " is " + nextTask.getStatus());
+
+				long duration = Math.min(TIME_SLICE, nextTask.getDuration());
+
+				executeTaskDuration(nextTask, duration);
+
+				nextTask.setDuration(nextTask.getDuration() - duration);
+
+				if (nextTask.getDuration() == 0) {
+					nextTask.setStatus(Status.COMPLETED);
+
+				} else {
+					nextTask.setStatus(Status.READY);
+					taskLinkedQueue.enqueue(nextTask);
+				}
+
+			} catch (EmptyCollectionException e) {
+				System.err.println(e.getMessage());
+			}
+		}
+	}
+
+	private int getCompletedTasks() {
+		return this.completedTasks;
 	}
 }
 
-// Do we need now scheduling algorithms?
-// TODO: TIME_SLICE static or dynamic? (static = is fixed) (dynamic = is flexible) Thinking...
-// TODO: Shortest-Job-First algorithm for scheduling.
+// TODO: Switch the while loops as long as the cpu is running, a scheduler waits for tasks.
