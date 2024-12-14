@@ -5,9 +5,10 @@ public class Kernel {
 
 	LinkedList<Task> taskLinkedList;
 	boolean isRunning;
+	private final int MAX_TASK_CAPACITY = 100;
 
 	public Kernel() {
-
+		// TODO: CPU, MEMORY, DEVICES, SERVER
 		this.taskLinkedList = new LinkedList<Task>();
 		this.isRunning = true;
 	}
@@ -45,7 +46,7 @@ public class Kernel {
 
 	public void addTask(Task task) throws NotElementComparableException {
 
-		if (!this.isRunning) {
+		if (this.isRunning == false) {
 			System.out.println("KERNEL DID NOT STARTED YET");
 			return;
 		}
@@ -55,11 +56,28 @@ public class Kernel {
 			return;
 		}
 
+		if (taskLinkedList.size() >= MAX_TASK_CAPACITY) {
+			System.out.println("MAX CAPACITY OF TASKS IN KERNEL REACHED");
+			return;
+		}
 
-		if (this.isRunning) {
+		if (this.isRunning == true) {
 			this.taskLinkedList.add(task);
 			System.out.println("New task " + task.getName() + " was added.");
 		}
 	}
 
+	private void validateRessources(Task task) {
+
+		// TODO: validate Memory resource for a Task
+
+		// TODO: validate CPU resource for a Task
+
+		// TODO: validate Devices resource for a task
+
+	}
+
 }
+
+// TODO: validate resources for a Task.
+// TODO: when adding a Task, validate if the system is running, then validate the Task itself and if it fits the Kernel resources.
