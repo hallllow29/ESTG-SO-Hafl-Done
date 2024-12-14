@@ -51,7 +51,12 @@ public class Devices {
             logger.info("Starting devices...");
             this.isRunning = true;
             for (Device device : this.devices.getValues()) {
-                device.connect();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        device.connect();
+                    }
+                }).start();
             }
         }
     }
@@ -61,7 +66,12 @@ public class Devices {
             logger.info("Stopping device management...");
             this.isRunning = false;
             for (Device device : this.devices.getValues()) {
-                device.disconnect();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        device.disconnect();
+                    }
+                }).start();
             }
         }
     }

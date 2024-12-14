@@ -7,6 +7,7 @@ public class Server {
     private static final Logger logger = Logger.getLogger(Server.class.getName());
     private final HashMap<String, Service> services;
     private final HashMap<String, Device> devices;
+    private Thread serverThread;
 
     public Server() {
         this.isRunning = false;
@@ -20,11 +21,20 @@ public class Server {
             return;
         }
 
-        logger.info("Starting server...");
-        this.isRunning = true;
-        startHardwareService();
-        startServiceManager();
-        logger.info("Server started");
+        Runnable serverTask = new Runnable() {
+            @Override
+            public void run() {
+                logger.info("Starting server...");
+                isRunning = true;
+                startHardwareService();
+                startServiceManager();
+                logger.info("Server started");
+            }
+        };
+
+        this.serverThread = new Thread(serverTask);
+        this.serverThread.start();
+
     }
 
     public synchronized void stop() {
@@ -37,6 +47,14 @@ public class Server {
         stopHardwareService();
         stopServiceManager();
         this.isRunning = false;
+
+        try {
+            serverThread.join();
+
+        } catch (InterruptedException e) {
+            logger.severe("Error stopping server" + e.getMessage());
+        }
+
         logger.info("Server stopped");
     }
 
