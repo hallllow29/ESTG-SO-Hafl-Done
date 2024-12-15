@@ -209,6 +209,63 @@ public class Mem {
         this.failedAllocations++;
 		logger.warning("Failed allocation for MemoryBlock " + id + " with size " + requestedSize);
 		return false;
+    }
+
+    public synchronized boolean allocateWF(String id, int requestedSize) {
+
+        if (!isRunning) {
+            logger.warning("Memory is not running...");
+        }
+
+        if (requestedSize <= 0) {
+            logger.warning("Invalid memory size...");
+            this.failedAllocations++;
+            return false;
+        }
+
+        if (this.totalMemoryUsed + requestedSize > MAX_MEMORY_SIZE) {
+            logger.warning("Not enough memory...");
+            this.failedAllocations++;
+            return false;
+        }
+
+        MemoryBlock worstBlock = null;
+
+        for (MemoryBlock block : this.memoryFree) {
+            if (block.getSize() >= requestedSize) {
+
+                if (worstBlock == null || block.getSize() < worstBlock.getSize()) {
+                    worstBlock = block;
+                }
+            }
+        }
+
+        if (worstBlock != null) {
+            String startID = worstBlock.getId();
+
+            MemoryBlock newBlock = new MemoryBlock(startID, requestedSize);
+            this.memoryBlocks.put(id, newBlock);
+            this.totalMemoryUsed += requestedSize;
+            this.peakMemoryUsage = Math.max(peakMemoryUsage, totalMemoryUsed);
+
+            worstBlock.setSize(worstBlock.getSize() - requestedSize);
+
+            if (worstBlock.getSize() == 0) {
+                try {
+                    this.memoryFree.remove(worstBlock)
+                } catch (EmptyCollectionException | ElementNotFoundException e) {
+                    System.err.println(e.getMessage());
+                }
+            }
+
+            logger.info("Memory allocated for " + id + " with size " + requestedSize);
+            this.allocationCount++;
+            return true;
+        }
+
+        this.failedAllocations++;
+        logger.warning("Failed allocation for MemoryBlock " + id + " with size " + requestedSize);
+        return false;
 
     }
 
@@ -219,17 +276,24 @@ public class Mem {
             return;
         }
 
-        MemoryBlock block = memoryBlocks.get(id);
+        MemoryBlock blockToFree = memoryBlocks.get(id);
 
-        if (block == null) {
+        if (blockToFree == null) {
             logger.warning("Memory block not found...");
             return;
         }
 
         memoryBlocks.remove(id);
-        totalMemoryUsed -= block.getSize();
+        totalMemoryUsed -= blockToFree.getSize();
 
-        logger.info("Memory freed " + block.getSize() + " for " + id);
+        // Updates here the memoryFree LinkedList
+        try {
+            this.memoryFree.add(new MemoryBlock(blockToFree.getId(), blockToFree.getSize()));
+        } catch (NotElementComparableException e) {
+            System.err.println(e.getMessage());
+        }
+
+        logger.info("Memory freed " + blockToFree.getSize() + " for " + id);
         printMemoryStatus();
     }
 
@@ -280,5 +344,3 @@ public class Mem {
     }
 
 }
-
-// TODO: MEMORY allocating algorithm BestFit BF
