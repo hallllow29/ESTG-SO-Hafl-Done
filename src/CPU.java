@@ -91,7 +91,7 @@ public class CPU {
 
 	}
 
-	public synchronized void executeTask(Task task) {
+	/*public synchronized void executeTask(Task task) {
 
 		if (task == null) {
 			System.out.println("TASK CANNOT BE NULL");
@@ -128,7 +128,7 @@ public class CPU {
 			System.out.println("CPU COMPLETED TASK " + task.getName());
 			this.completedTasks++;
 		}
-	}
+	}*/
 
 
 

@@ -334,7 +334,7 @@ public class Mem {
         return (MAX_MEMORY_SIZE - totalMemoryUsed) >= MIN_FREE_MEMORY;
     }
 
-    private void printMemoryStatus() {
+    private synchronized void printMemoryStatus() {
         logger.info("\n==================== MEMORY STATUS ====================");
         logger.info("Total Memory: " + MAX_MEMORY_SIZE + "MB");
         logger.info("Total memory used: " + totalMemoryUsed + "MB");

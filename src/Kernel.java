@@ -131,7 +131,7 @@ public class Kernel {
 
 		task.setStatus(Status.RUNNING);
 
-		cpu.executeTask(task);
+		cpu.executeTaskDuration(task, task.getDuration());
 
 		task.setStatus(Status.COMPLETED);
 
@@ -144,22 +144,9 @@ public class Kernel {
 			return false;
 		}
 
-		try {
-			if (taskDuplicate(task)) {
-				System.out.println("TASK CANNOT BE A DUPLICATE");
-				return false;
-			}
-		} catch (EmptyCollectionException e) {
-			System.out.println(e.getMessage());
-		}
-
 		return true;
-
 	}
 
-	private synchronized boolean taskDuplicate(Task task) throws EmptyCollectionException {
-		return this.taskLinkedList.contains(task);
-	}
 
 	public synchronized void scheduleTask(Task task) {
 
@@ -190,7 +177,7 @@ public class Kernel {
 			try {
 				Task nextTask = taskLinkedQueue.dequeue();
 				System.out.println("TASK " + nextTask.getName() + " ADDED TO QUEUE");
-				cpu.executeTask(nextTask);
+				cpu.executeTaskDuration(nextTask, nextTask.getDuration());
 
 			} catch (EmptyCollectionException e) {
 				System.err.println(e.getMessage());
@@ -277,7 +264,7 @@ public class Kernel {
 			taskLinkedOrderedListIterator.remove();
 			System.out.println("TASK " + nextTask.getName() +
 				" is " + nextTask.getStatus());
-			cpu.executeTask(nextTask);
+			cpu.executeTaskDuration(nextTask, nextTask.getDuration());
 		}
 	}
 
@@ -332,7 +319,7 @@ public class Kernel {
 
 			// Executa a tarefa no CPU
 			if (cpu.isAvailable()) {
-				cpu.executeTask(nextTask);
+				cpu.executeTaskDuration(nextTask, nextTask.getDuration());
 			} else {
 				// Se CPU não está disponível, coloca de volta na fila
 				taskPriorityQueue.addElement(nextTask, nextTask.getPriority());

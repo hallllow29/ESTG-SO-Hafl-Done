@@ -8,15 +8,19 @@ public class Main {
 
 		creepingSystem.start();
 
-		Task task_1 = new Task("Task_1", 5, 2000, 24, DeviceType.INPUT);
-		Task task_2 = new Task("Task_2", 4, 2500, 200, DeviceType.OUTPUT);
-		Task task_3 = new Task("Task_3", 6, 1500, 50, DeviceType.INPUT);
+		Task task_1 = new Task("Task_1", 1, 0, 24, DeviceType.INPUT);
+		Task task_2 = new Task("Task_2", 2, 0, 200, DeviceType.OUTPUT);
+		Task task_3 = new Task("Task_3", 3, 0, 50, DeviceType.INPUT);
 
 		creepingSystem.addTask(task_1);
 		creepingSystem.addTask(task_2);
 		creepingSystem.addTask(task_3);
 
-		kernel.executeOneTask(task_1);
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			System.err.println(e.getMessage());
+		}
 		creepingSystem.stop();
 
 		System.out.println("Task " + task_1.getName() + " Status " + task_1.getStatus());

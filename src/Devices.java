@@ -16,7 +16,7 @@ public class Devices {
         this.initDevices();
     }
 
-    private void initDevices() throws EmptyCollectionException {
+    private synchronized void initDevices() throws EmptyCollectionException {
         this.addDevice("DISPLAY", DeviceType.INPUT);
         this.addDevice("KEYBOARD", DeviceType.INPUT);
         this.addDevice("MOUSE", DeviceType.INPUT);
