@@ -2,8 +2,8 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		Kernel kernel = new Kernel();
 
+		Kernel kernel = new Kernel();
 		CreepingSystem creepingSystem = new CreepingSystem(kernel);
 
 		creepingSystem.start();

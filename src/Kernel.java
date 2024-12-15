@@ -11,7 +11,7 @@ public class Kernel {
 	private Server server;
 	LinkedList<Task> taskLinkedList;
 	boolean isRunning;
-	private final int MAX_TASK_CAPACITY = 100;
+	private final int MAX_TASK_CAPACITY = 5;
 
 	public Kernel() {
 		this.taskLinkedList = new LinkedList<Task>();
@@ -22,8 +22,8 @@ public class Kernel {
 		} catch (EmptyCollectionException e) {
 			System.err.println(e.getMessage());
 		}
-		this.server = new Server();
-		this.isRunning = true;
+		// this.server = new Server();
+		this.isRunning = false;
 	}
 
 
@@ -32,7 +32,7 @@ public class Kernel {
 	}
 
 
-	public void start() {
+	public synchronized void start() {
 
 		if (this.isRunning) {
 			System.out.println("KERNEL ALREADY STARTED");
@@ -44,13 +44,13 @@ public class Kernel {
 		cpu.start();
 		mem.start();
 		devices.start();
-		server.start();
+		// server.start();
 
-		isRunning = true;
+		this.isRunning = true;
 		System.out.println("KERNEL STARTED");
 	}
 
-	public void stop() {
+	public synchronized void stop() {
 
 		if (!this.isRunning) {
 			System.out.println("KERNEL ALREADY STOPPED");
@@ -61,13 +61,13 @@ public class Kernel {
 		cpu.stop();
 		mem.stop();
 		devices.stop();
-		server.stop();
+		// server.stop();
 
-		isRunning = false;
+		this.isRunning = false;
 		System.out.println("KERNEL STOPPED");
 	}
 
-	public void addTask(Task task) {
+	public synchronized void addTask(Task task) {
 
 		if (this.isRunning == false) {
 			System.out.println("KERNEL DID NOT STARTED YET");
@@ -94,7 +94,7 @@ public class Kernel {
 		}
 	}
 
-	public boolean validateRessources(Task task) {
+	public synchronized boolean validateRessources(Task task) {
 
 		if (!cpu.isAvailable()) {
 			System.out.println("CPU IS NOT AVAILABLE");
@@ -114,7 +114,7 @@ public class Kernel {
 		return true;
 	}
 
-	public void executeOneTask(Task task) {
+	public synchronized void executeOneTask(Task task) {
 
 		if (!taskValid(task)) {
 			System.out.println("TASK IS NOT VALID");
@@ -134,7 +134,7 @@ public class Kernel {
 
 	}
 
-	private boolean taskValid(Task task) {
+	private synchronized boolean taskValid(Task task) {
 
 		if (task == null) {
 			System.out.println("TASK CANNOT BE NULL");
@@ -154,7 +154,7 @@ public class Kernel {
 
 	}
 
-	private boolean taskDuplicate(Task task) throws EmptyCollectionException {
+	private synchronized boolean taskDuplicate(Task task) throws EmptyCollectionException {
 		return this.taskLinkedList.contains(task);
 	}
 

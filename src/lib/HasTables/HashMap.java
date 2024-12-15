@@ -217,11 +217,23 @@ public class HashMap<K, V> implements MapADT<K, V> {
     }
 
     public V putIfAbsent(K key, V value) throws EmptyCollectionException {
-        V existingValue = this.get(key);
-        if (existingValue == null) {
-            this.put(key, value);
-            return null;
-        }
+
+		if (key == null) {
+			throw new IllegalArgumentException("Key cannot be null");
+		}
+
+		if (isEmpty()) {
+			this.put(key, value);
+			return null;
+		}
+
+		V existingValue = null;
+
+		try {
+			existingValue = this.get(key);
+		} catch (NoSuchElementException e) {
+			existingValue = null;
+		}
 
         return existingValue;
 }

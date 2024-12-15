@@ -21,6 +21,7 @@ public class CreepingSystem implements Runnable {
 		System.out.println("CREEPING SYSTEM STARTING...");
 
 		this.isRunning = true;
+
 		this.thread = new Thread(this);
 		this.thread.start();
 
