@@ -3,6 +3,7 @@ package lib.lists;
 import lib.exceptions.ElementNotFoundException;
 import lib.exceptions.EmptyCollectionException;
 import lib.interfaces.UnorderedListADT;
+import lib.LinearNode;
 
 public class LinkedUnorderedList<T> extends LinkedList<T> implements UnorderedListADT<T> {
 
