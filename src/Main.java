@@ -12,9 +12,9 @@ public class Main {
 		Task task_2 = new Task("Task_2", 4, 2500, 200, DeviceType.OUTPUT);
 		Task task_3 = new Task("Task_3", 6, 1500, 50, DeviceType.INPUT);
 
-		kernel.addTask(task_1);
-		kernel.addTask(task_2);
-		kernel.addTask(task_3);
+		creepingSystem.addTask(task_1);
+		creepingSystem.addTask(task_2);
+		creepingSystem.addTask(task_3);
 
 		kernel.executeOneTask(task_1);
 		creepingSystem.stop();

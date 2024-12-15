@@ -1,10 +1,8 @@
 import lib.exceptions.EmptyCollectionException;
-import lib.trees.PriorityQueue;
 public class CreepingSystem implements Runnable {
 
 	private Kernel kernel;
 	private Thread thread;
-	private PriorityQueue<Task> taskPriorityQueue;
 	private boolean isRunning;
 
 	public CreepingSystem(Kernel kernel) {
@@ -29,7 +27,7 @@ public class CreepingSystem implements Runnable {
 
 	}
 
-	public void stop(){
+	public void stop() {
 		if (!this.isRunning) {
 			System.out.println("CREEPING SYSTEM ALREADY STOPPED");
 			return;
@@ -51,30 +49,17 @@ public class CreepingSystem implements Runnable {
 		this.kernel.start();
 
 		while (this.isRunning) {
-			Task task = null;
-
-			synchronized (this.taskPriorityQueue) {
-				if (!this.taskPriorityQueue.isEmpty()) {
-					try {
-						task = this.taskPriorityQueue.removeElement();
-					} catch (EmptyCollectionException e) {
-						System.err.println(e.getMessage());
-					}
-
-					if (task != null) {
-						this.kernel.executeOneTask(task);
-					}
-
-				}
+			synchronized (this.kernel) {
+				this.kernel.processNextTask();
 			}
-		}
 
+		}
 		kernel.stop();
 	}
 
 	public void addTask(Task task) {
-		synchronized (this.taskPriorityQueue) {
-			this.taskPriorityQueue.addElement(task, task.getPriority());
+		synchronized (this.kernel) {
+			this.kernel.addTask(task);
 		}
 	}
 }
