@@ -119,8 +119,7 @@ public class Mem {
         // Traversing the the free memory blocks
         for (MemoryBlock block : this.memoryFree) {
 
-            // As soon as the requested size is smaller or equal than
-            // a block size
+            // looking for the first free space that fits that requested size
             if (block.getSize() >= requestedSize) {
 
                 // Get the start address from that memeory block
@@ -154,6 +153,63 @@ public class Mem {
 		this.failedAllocations++;
 		logger.warning("Failed allocation for MemoryBlock " + id + " with size " + requestedSize);
 		return false;
+    }
+
+    public synchronized boolean allocateBF(String id, int requestedSize) {
+        if (!isRunning) {
+            logger.warning("Memory is not running...");
+        }
+
+        if (requestedSize <= 0) {
+            logger.warning("Invalid memory size...");
+            this.failedAllocations++;
+            return false;
+        }
+
+        if (this.totalMemoryUsed + requestedSize > MAX_MEMORY_SIZE) {
+            logger.warning("Not enough memory...");
+            this.failedAllocations++;
+            return false;
+        }
+
+        MemoryBlock bestBlock = null;
+
+        for (MemoryBlock block : this.memoryFree) {
+            if (block.getSize() >= requestedSize) {
+
+                if (bestBlock == null || block.getSize() < bestBlock.getSize()) {
+                    bestBlock = block;
+                }
+            }
+        }
+
+        if (bestBlock != null) {
+            String startID = bestBlock.getId();
+
+            MemoryBlock newBlock = new MemoryBlock(startID, requestedSize);
+            this.memoryBlocks.put(id, newBlock);
+            this.totalMemoryUsed += requestedSize;
+            this.peakMemoryUsage = Math.max(peakMemoryUsage, totalMemoryUsed);
+
+            bestBlock.setSize(bestBlock.getSize() - requestedSize);
+
+            if (bestBlock.getSize() == 0) {
+                try {
+                    this.memoryFree.remove(bestBlock);
+                } catch (EmptyCollectionException | ElementNotFoundException e) {
+                    System.err.println(e.getMessage());
+                }
+            }
+
+            logger.info("Memory allocated for " + id + " with size " + requestedSize);
+            this.allocationCount++;
+            return true;
+        }
+
+        this.failedAllocations++;
+		logger.warning("Failed allocation for MemoryBlock " + id + " with size " + requestedSize);
+		return false;
+
     }
 
 
