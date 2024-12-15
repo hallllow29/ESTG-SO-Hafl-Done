@@ -6,14 +6,23 @@ public class Kernel {
 
 
 	private CPU cpu;
+	private Mem mem;
+	private Devices devices;
+	private Server server;
 	LinkedList<Task> taskLinkedList;
 	boolean isRunning;
 	private final int MAX_TASK_CAPACITY = 100;
 
 	public Kernel() {
-		// TODO: CPU, MEMORY, DEVICES, SERVER
 		this.taskLinkedList = new LinkedList<Task>();
 		this.cpu = new CPU();
+		this.mem = new Mem();
+		try {
+			this.devices = new Devices();
+		} catch (EmptyCollectionException e) {
+			System.err.println(e.getMessage());
+		}
+		this.server = new Server();
 		this.isRunning = true;
 	}
 
@@ -33,6 +42,9 @@ public class Kernel {
 		System.out.println("KERNEL STARTING...");
 
 		cpu.start();
+		mem.start();
+		devices.start();
+		server.start();
 
 		isRunning = true;
 		System.out.println("KERNEL STARTED");
@@ -45,13 +57,17 @@ public class Kernel {
 		}
 
 		System.out.println("KERNEL STOPPING...");
-		// TODO: MEMORY, DEVICES, SERVER
+
 		cpu.stop();
+		mem.stop();
+		devices.stop();
+		server.stop();
+
 		isRunning = false;
 		System.out.println("KERNEL STOPPED");
 	}
 
-	public void addTask(Task task) throws NotElementComparableException {
+	public void addTask(Task task) {
 
 		if (this.isRunning == false) {
 			System.out.println("KERNEL DID NOT STARTED YET");
@@ -69,28 +85,44 @@ public class Kernel {
 		}
 
 		if (this.isRunning == true) {
-			this.taskLinkedList.add(task);
-			System.out.println("New task " + task.getName() + " was added.");
+			try {
+				this.taskLinkedList.add(task);
+				System.out.println("New task " + task.getName() + " was added.");
+			} catch (NotElementComparableException e) {
+				System.err.println(e.getMessage());
+			}
 		}
 	}
 
-	private void validateRessources(Task task) {
+	public boolean validateRessources(Task task) {
 
 		if (!cpu.isAvailable()) {
 			System.out.println("CPU IS NOT AVAILABLE");
+			return false;
 		}
 
-		// TODO: validate Memory resource for a Task
+		if (!mem.hasAvailableMemory(task.getMemorySize())) {
+			System.out.println("MEMORY IS NOT AVAILABLE");
+			return false;
+		}
 
+		if (!devices.isDeviceAvailable(task.getDeviceRequired().name())) {
+			System.out.println("DEVICE IS NOT AVAILABLE");
+			return false;
+		}
 
-		// TODO: validate Devices resource for a task
-
+		return true;
 	}
 
-	private void executeOneTask(Task task) {
+	public void executeOneTask(Task task) {
 
 		if (!taskValid(task)) {
 			System.out.println("TASK IS NOT VALID");
+			return;
+		}
+
+		if (!validateRessources(task)) {
+			System.out.println("RESOURCES ARE NOT AVAILABLE");
 			return;
 		}
 

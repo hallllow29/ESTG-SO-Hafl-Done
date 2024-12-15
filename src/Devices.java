@@ -76,8 +76,13 @@ public class Devices {
         }
     }
 
-    public synchronized boolean isDeviceAvailable(String name) throws EmptyCollectionException {
-        Device device = this.devices.get(name);
+    public synchronized boolean isDeviceAvailable(String name) {
+        Device device = null;
+        try {
+            device = this.devices.get(name);
+        } catch (EmptyCollectionException e) {
+            System.err.println(e.getMessage());
+        }
         return device != null && device.isConnected() && !device.isBusy();
     }
 
