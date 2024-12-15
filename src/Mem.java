@@ -1,8 +1,9 @@
 import lib.HasTables.HashMap;
+import lib.LinearNode;
 import lib.exceptions.ElementNotFoundException;
 import lib.exceptions.EmptyCollectionException;
 import lib.exceptions.NotElementComparableException;
-import lib.lists.LinkedList;
+import lib.lists.LinkedOrderedList;
 
 import java.util.logging.Logger;
 
@@ -11,7 +12,7 @@ public class Mem {
     private static final int MAX_MEMORY_SIZE = 1024;
     private static final int MIN_FREE_MEMORY = 64;
 
-    private final LinkedList<MemoryBlock> memoryFree;
+    private final LinkedOrderedList<MemoryBlock> memoryFree;
     private final HashMap<String, MemoryBlock> memoryBlocks;
     private int totalMemoryUsed;
     private boolean isRunning;
@@ -24,9 +25,9 @@ public class Mem {
 
     public Mem() {
 
-		this.memoryFree = new LinkedList<>();
+		this.memoryFree = new LinkedOrderedList<MemoryBlock>();
         try {
-        	this.memoryFree.add(new MemoryBlock("0", MAX_MEMORY_SIZE));
+        	this.memoryFree.add(new MemoryBlock("0000", 0, MAX_MEMORY_SIZE));
         } catch (NotElementComparableException e) {
 			System.out.println(e.getMessage());
 		}
@@ -68,7 +69,7 @@ public class Mem {
 	   }
     }
 
-    public synchronized boolean allocateMemory(String id, int requestedSize) {
+    public synchronized boolean allocateMemory(String id, int startAddress, int requestedSize) {
         if (!isRunning) {
             logger.warning("Memory is not running...");
             return false;
@@ -86,7 +87,7 @@ public class Mem {
             return false;
         }
 
-        MemoryBlock block = new MemoryBlock(id, requestedSize);
+        MemoryBlock block = new MemoryBlock(id, startAddress, requestedSize);
         memoryBlocks.put(id, block);
         totalMemoryUsed += requestedSize;
         allocationCount++;
@@ -123,10 +124,10 @@ public class Mem {
             if (block.getSize() >= requestedSize) {
 
                 // Get the start address from that memeory block
-                String startID = block.getId();
+                int startAddress = block.getStartAddress();
 
                 // Allocate a new Block
-                MemoryBlock newBlock = new MemoryBlock(startID, requestedSize);
+                MemoryBlock newBlock = new MemoryBlock(id, startAddress, requestedSize);
 
                 this.memoryBlocks.put(id, newBlock);
                 this.totalMemoryUsed += requestedSize;
@@ -184,9 +185,9 @@ public class Mem {
         }
 
         if (bestBlock != null) {
-            String startID = bestBlock.getId();
+            int startAddress = bestBlock.getStartAddress();
 
-            MemoryBlock newBlock = new MemoryBlock(startID, requestedSize);
+            MemoryBlock newBlock = new MemoryBlock(id, startAddress, requestedSize);
             this.memoryBlocks.put(id, newBlock);
             this.totalMemoryUsed += requestedSize;
             this.peakMemoryUsage = Math.max(peakMemoryUsage, totalMemoryUsed);
@@ -241,9 +242,9 @@ public class Mem {
         }
 
         if (worstBlock != null) {
-            String startID = worstBlock.getId();
+            int startAddress = worstBlock.getStartAddress();
 
-            MemoryBlock newBlock = new MemoryBlock(startID, requestedSize);
+            MemoryBlock newBlock = new MemoryBlock(id, startAddress, requestedSize);
             this.memoryBlocks.put(id, newBlock);
             this.totalMemoryUsed += requestedSize;
             this.peakMemoryUsage = Math.max(peakMemoryUsage, totalMemoryUsed);
@@ -252,7 +253,7 @@ public class Mem {
 
             if (worstBlock.getSize() == 0) {
                 try {
-                    this.memoryFree.remove(worstBlock)
+                    this.memoryFree.remove(worstBlock);
                 } catch (EmptyCollectionException | ElementNotFoundException e) {
                     System.err.println(e.getMessage());
                 }
@@ -288,13 +289,41 @@ public class Mem {
 
         // Updates here the memoryFree LinkedList
         try {
-            this.memoryFree.add(new MemoryBlock(blockToFree.getId(), blockToFree.getSize()));
+            this.memoryFree.add(new MemoryBlock(blockToFree.getId(), blockToFree.getStartAddress(), blockToFree.getSize()));
         } catch (NotElementComparableException e) {
             System.err.println(e.getMessage());
         }
 
         logger.info("Memory freed " + blockToFree.getSize() + " for " + id);
         printMemoryStatus();
+    }
+
+    private void mergeMemoryFreeBlocks() throws EmptyCollectionException, ElementNotFoundException {
+
+        // There is no need to merge one block with nothing.
+        if (this.memoryFree.isEmpty() || this.memoryFree.size() == 1) {
+            return;
+        }
+
+        // Get the first block of the memoryFree List
+        LinearNode<MemoryBlock> currentNode = this.memoryFree.getFront();
+
+        while (currentNode != null && currentNode.getNext() != null) {
+            MemoryBlock currentBlock = currentNode.getElement();
+            MemoryBlock nextBlock = currentNode.getNext().getElement();
+
+            if (currentBlock.getStartAddress() + currentBlock.getSize() == nextBlock.getStartAddress()) {
+
+                // Merging...
+                currentBlock.setSize(currentBlock.getSize() + nextBlock.getSize());
+
+                // Remove the next block, since next block
+                // was merged by current.
+                this.memoryFree.remove(nextBlock);
+            } else {
+                currentNode = currentNode.getNext();
+            }
+        }
     }
 
     public synchronized boolean hasAvailableMemory(int requiredSize) {

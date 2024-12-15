@@ -1,5 +1,6 @@
 package lib.lists;
 
+import lib.LinearNode;
 import lib.exceptions.NotElementComparableException;
 import lib.interfaces.OrderedListADT;
 
