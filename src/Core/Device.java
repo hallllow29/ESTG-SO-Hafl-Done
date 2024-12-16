@@ -1,3 +1,6 @@
+package Core;
+import Enums.DeviceType;
+
 public class Device {
 
     private final String name;
@@ -15,13 +18,13 @@ public class Device {
 
     public synchronized void connect() {
         this.connected = true;
-        System.out.println("Device connected -> " + this.name);
+        System.out.println("Core.Device connected -> " + this.name);
     }
 
     public synchronized void disconnect() {
         this.connected = false;
         this.busy = false;
-        System.out.println("Device disconnected -> " + this.name);
+        System.out.println("Core.Device disconnected -> " + this.name);
     }
 
     public synchronized boolean requestUse() {

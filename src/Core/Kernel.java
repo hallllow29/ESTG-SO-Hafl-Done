@@ -1,36 +1,23 @@
+package Core;
 import lib.exceptions.EmptyCollectionException;
-import lib.exceptions.NotElementComparableException;
-import lib.lists.LinkedList;
-import lib.lists.LinkedOrderedList;
-import lib.queues.LinkedQueue;
 import lib.trees.PriorityQueue;
 
-import java.util.Iterator;
 
 public class Kernel {
 
 	private CPU cpu;
-	private Mem mem;
+	private Mem memory;
 	private Devices devices;
 	private Server server;
-	LinkedList<Task> taskLinkedList;
 	PriorityQueue<Task> taskPriorityQueue;
-	LinkedQueue<Task> taskLinkedQueue;
 	boolean isRunning;
-	private final int MAX_TASK_CAPACITY = 5;
 
 	public Kernel() {
-		this.taskLinkedList = new LinkedList<>();
 		this.taskPriorityQueue = new PriorityQueue<Task>();
-		this.taskLinkedQueue = new LinkedQueue<Task>();
 		this.cpu = new CPU();
-		this.mem = new Mem();
-		try {
-			this.devices = new Devices();
-		} catch (EmptyCollectionException e) {
-			System.err.println(e.getMessage());
-		}
-		// this.server = new Server();
+		this.memory = new Mem();
+		this.devices = new Devices();
+		this.server = new Server();
 		this.isRunning = false;
 	}
 
@@ -38,7 +25,7 @@ public class Kernel {
 		return this.isRunning;
 	}
 
-	public synchronized void start() {
+	public void start() {
 
 		if (this.isRunning) {
 			System.out.println("KERNEL ALREADY STARTED");
@@ -48,15 +35,15 @@ public class Kernel {
 		System.out.println("KERNEL STARTING...");
 
 		cpu.start();
-		mem.start();
+		memory.start();
 		devices.start();
-		// server.start();
+		server.start();
 
 		this.isRunning = true;
 		System.out.println("KERNEL STARTED");
 	}
 
-	public synchronized void stop() {
+	public void stop() {
 
 		if (!this.isRunning) {
 			System.out.println("KERNEL ALREADY STOPPED");
@@ -65,9 +52,9 @@ public class Kernel {
 		System.out.println("KERNEL STOPPING...");
 
 		cpu.stop();
-		mem.stop();
+		memory.stop();
 		devices.stop();
-		// server.stop();
+		server.stop();
 
 		this.isRunning = false;
 		System.out.println("KERNEL STOPPED");
@@ -75,83 +62,102 @@ public class Kernel {
 
 	public synchronized void addTask(Task task) {
 
-		/*if (this.isRunning == false) {
+		if (!this.isRunning) {
 			System.out.println("KERNEL DID NOT STARTED YET");
 			return;
 		}
 
-		if (task == null) {
-			System.out.println("TASK CANNOT BE NULL");
+		if (taskValid(task)) {
+			taskPriorityQueue.addElement(task, task.getPriority().ordinal());
+			System.out.println("NEW TASK " + task.getName() + " WAS ADDED TO PRIORITY QUEUE.");
+		}
+
+	}
+
+	public synchronized void processNextTask() {
+
+		// Either I leave here or in addTask(Core.Task)...
+		if (!this.isRunning) {
+			System.out.println("KERNEL DID NOT STARTED YET");
 			return;
 		}
 
-		if (taskLinkedList.size() >= MAX_TASK_CAPACITY) {
-			System.out.println("MAX CAPACITY OF TASKS IN KERNEL REACHED");
+		if (this.taskPriorityQueue.isEmpty() || this.taskPriorityQueue == null) {
+			System.out.println("TASK PRIORITY QUEUE IS EMPTY");
 			return;
-		}*/
+		}
 
-		if (this.isRunning == true) {
-			this.taskPriorityQueue.addElement(task, task.getPriority());
-			System.out.println("New task " + task.getName() + " was added.");
+		try {
+			Task nextTask = this.taskPriorityQueue.removeElement();
+			if (validateRessources(nextTask)) {
 
+				cpu.executeOneTask(nextTask);
+
+				releaseResources(nextTask);
+
+			} else {
+				taskPriorityQueue.addElement(nextTask, nextTask.getPriority().ordinal());
+			}
+		} catch (EmptyCollectionException e) {
+			System.err.println("TASK PRIORITY QUEUE IS EMPTY");
 		}
 	}
 
-	public synchronized boolean validateRessources(Task task) {
+	public boolean validateRessources(Task task) {
 
 		if (!cpu.isAvailable()) {
-			System.out.println("CPU IS NOT AVAILABLE");
+			System.out.println("Core.CPU IS NOT AVAILABLE");
 			return false;
 		}
 
-		if (!mem.hasAvailableMemory(task.getMemorySize())) {
+		if (!memory.hasAvailableMemory(task.getMemorySize())) {
 			System.out.println("MEMORY IS NOT AVAILABLE");
 			return false;
 		}
 
-		if (!devices.isDeviceAvailable(task.getDeviceRequired().name())) {
-			System.out.println("DEVICE IS NOT AVAILABLE");
+		if (!memory.allocateFF(task)) {
 			return false;
 		}
 
 		return true;
 	}
 
-	public synchronized void executeOneTask(Task task) {
-
-		if (!taskValid(task)) {
-			System.out.println("TASK IS NOT VALID");
-			return;
-		}
-
-		if (!validateRessources(task)) {
-			System.out.println("RESOURCES ARE NOT AVAILABLE");
-			return;
-		}
-
-		task.setStatus(Status.RUNNING);
-
-		cpu.executeTaskDuration(task, task.getDuration());
-
-		task.setStatus(Status.COMPLETED);
-
-	}
-
-	private synchronized boolean taskValid(Task task) {
+	private boolean taskValid(Task task) {
 
 		if (task == null) {
 			System.out.println("TASK CANNOT BE NULL");
 			return false;
 		}
 
+		if (task.getDuration() <= 0) {
+			System.out.println("TASK DURATION CANNOT BE ZERO");
+			return false;
+		}
+
+		if (task.getName() == null) {
+			System.out.println("TASK NAME CANNOT BE NULL");
+			return false;
+		}
+
 		return true;
 	}
 
+	private void releaseResources(Task task) {
+        try {
+           this.memory.freeMemory(task.getName());
+        } catch (Exception e) {
+            System.err.println("Error releasing memory: " + e.getMessage());
+        }
+    }
 
-	public synchronized void scheduleTask(Task task) {
+}
+
+/*
+
+	public synchronized void scheduleTask(Core.Task task) {
 
 		if (!this.isRunning) {
-			System.out.println("CPU IS NOT RUNNING");
+			System.out.println("Core.CPU IS NOT RUNNING");
 		}
 
 		System.out.println("SCHEDULING TASK: " + task.getName() + " with priority: " + task.getPriority());
@@ -162,7 +168,7 @@ public class Kernel {
 	public synchronized void scheduleFCFS() {
 
 		if (!this.isRunning) {
-			System.out.println("CPU IS NOT RUNNING");
+			System.out.println("Core.CPU IS NOT RUNNING");
 			return;
 		}
 
@@ -175,7 +181,7 @@ public class Kernel {
 		while (!taskLinkedQueue.isEmpty()) {
 
 			try {
-				Task nextTask = taskLinkedQueue.dequeue();
+				Core.Task nextTask = taskLinkedQueue.dequeue();
 				System.out.println("TASK " + nextTask.getName() + " ADDED TO QUEUE");
 				cpu.executeTaskDuration(nextTask, nextTask.getDuration());
 
@@ -189,7 +195,7 @@ public class Kernel {
 	public synchronized void schedulePreemptive() {
 
 		if (!this.isRunning) {
-			System.out.println("CPU IS NOT RUNNING");
+			System.out.println("Core.CPU IS NOT RUNNING");
 			return;
 		}
 
@@ -200,21 +206,21 @@ public class Kernel {
 
 		while (!this.taskPriorityQueue.isEmpty()) {
 			try {
-				Task nextTask = this.taskPriorityQueue.removeElement();
-				nextTask.setStatus(Status.RUNNING);
+				Core.Task nextTask = this.taskPriorityQueue.removeElement();
+				nextTask.setStatus(Enums.Status.RUNNING);
 				System.out.println("TASK " + nextTask.getName() + " with Priority: " + nextTask.getPriority() + " is " + nextTask.getStatus());
 
 				long duration = nextTask.getDuration();
 
 				if (duration < cpu.getTIMESLICE()) {
 					Thread.sleep(duration);
-					nextTask.setStatus(Status.COMPLETED);
+					nextTask.setStatus(Enums.Status.COMPLETED);
 					System.out.println("TASK " + nextTask.getName() + " is " + nextTask.getStatus());
 				} else {
 					Thread.sleep(cpu.getTIMESLICE());
-					// TODO: Pause the Task
+					// TODO: Pause the Core.Task
 					nextTask.setDuration(duration - cpu.getTIMESLICE());
-					nextTask.setStatus(Status.PAUSED);
+					nextTask.setStatus(Enums.Status.PAUSED);
 					System.out.println("TASK " + nextTask.getName() + " is " + nextTask.getStatus() + " with a duration: " + nextTask.getDuration() + "ms");
 					this.taskPriorityQueue.addElement(nextTask, nextTask.getPriority());
 				}
@@ -230,7 +236,7 @@ public class Kernel {
 	public synchronized void scheduleSFJ() {
 
 		if (!this.isRunning) {
-			System.out.println("CPU IS NOT RUNNING");
+			System.out.println("Core.CPU IS NOT RUNNING");
 			return;
 		}
 
@@ -239,13 +245,13 @@ public class Kernel {
 			return;
 		}
 
-		LinkedOrderedList<Task> taskLinkedOrderedList = new LinkedOrderedList<Task>();
-		Task nextTask = null;
+		LinkedOrderedList<Core.Task> taskLinkedOrderedList = new LinkedOrderedList<Core.Task>();
+		Core.Task nextTask = null;
 
 		while (!this.taskLinkedQueue.isEmpty()) {
 			try {
 				nextTask = this.taskLinkedQueue.dequeue();
-				nextTask.setStatus(Status.READY);
+				nextTask.setStatus(Enums.Status.READY);
 
 				System.out.println("TASK " + nextTask.getName() +
 					" is " + nextTask.getStatus() +
@@ -257,7 +263,7 @@ public class Kernel {
 			}
 		}
 
-		Iterator<Task> taskLinkedOrderedListIterator = taskLinkedOrderedList.iterator();
+		Iterator<Core.Task> taskLinkedOrderedListIterator = taskLinkedOrderedList.iterator();
 
 		while (taskLinkedOrderedListIterator.hasNext()) {
 			nextTask = taskLinkedOrderedListIterator.next();
@@ -271,7 +277,7 @@ public class Kernel {
 	public synchronized void scheduleRR() {
 
 		if (!this.isRunning) {
-			System.out.println("CPU IS NOT RUNNING");
+			System.out.println("Core.CPU IS NOT RUNNING");
 			return;
 		}
 
@@ -280,12 +286,12 @@ public class Kernel {
 			return;
 		}
 
-		Task nextTask = null;
+		Core.Task nextTask = null;
 
 		while (!taskLinkedQueue.isEmpty()) {
 			try {
 				nextTask = taskLinkedQueue.dequeue();
-				nextTask.setStatus(Status.RUNNING);
+				nextTask.setStatus(Enums.Status.RUNNING);
 				System.out.println("TASK " + nextTask.getName() + " is " + nextTask.getStatus());
 
 				long duration = Math.min(cpu.getTIMESLICE(), nextTask.getDuration());
@@ -295,10 +301,10 @@ public class Kernel {
 				nextTask.setDuration(nextTask.getDuration() - duration);
 
 				if (nextTask.getDuration() == 0) {
-					nextTask.setStatus(Status.COMPLETED);
+					nextTask.setStatus(Enums.Status.COMPLETED);
 
 				} else {
-					nextTask.setStatus(Status.READY);
+					nextTask.setStatus(Enums.Status.READY);
 					taskLinkedQueue.enqueue(nextTask);
 				}
 
@@ -307,29 +313,4 @@ public class Kernel {
 			}
 		}
 	}
-
-	public synchronized void processNextTask() {
-		if (taskPriorityQueue.isEmpty()) {
-			return;  // Não há tarefas para processar
-		}
-
-		try {
-			// Remove a próxima tarefa da fila de prioridade
-			Task nextTask = taskPriorityQueue.removeElement();
-
-			// Executa a tarefa no CPU
-			if (cpu.isAvailable()) {
-				cpu.executeTaskDuration(nextTask, nextTask.getDuration());
-			} else {
-				// Se CPU não está disponível, coloca de volta na fila
-				taskPriorityQueue.addElement(nextTask, nextTask.getPriority());
-			}
-
-		} catch (EmptyCollectionException e) {
-			System.err.println("Error processing next task: " + e.getMessage());
-		}
-	}
-
-}
-
-// TODO: when adding a Task, validate if the system is running, then validate the Task itself and if it fits the Kernel resources.
+*/
