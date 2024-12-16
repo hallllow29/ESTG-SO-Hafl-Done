@@ -1,3 +1,6 @@
+import Enums.DeviceType;
+import Enums.Status;
+
 public class Task implements Comparable<Task>, Runnable {
 
 	private final String name;

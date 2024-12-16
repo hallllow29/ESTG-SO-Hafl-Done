@@ -1,3 +1,5 @@
+import Core.Device;
+
 import java.util.HashMap;
 import java.util.logging.Logger;
 

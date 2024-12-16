@@ -143,12 +143,12 @@ public class Kernel {
 	}
 
 	private void releaseResources(Task task) {
-        try {
-           this.memory.freeMemory(task.getName());
-        } catch (Exception e) {
-            System.err.println("Error releasing memory: " + e.getMessage());
-        }
-    }
+		try {
+			this.memory.freeMemory(task.getName());
+		} catch (Exception e) {
+			System.err.println("Error releasing memory: " + e.getMessage());
+		}
+	}
 
 }
 

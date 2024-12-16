@@ -1,3 +1,5 @@
+import Core.Device;
+import Enums.DeviceType;
 import lib.HasTables.HashMap;
 import lib.exceptions.ElementNotFoundException;
 import lib.exceptions.EmptyCollectionException;

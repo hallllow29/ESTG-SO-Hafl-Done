@@ -1,3 +1,4 @@
+import Core.Kernel;
 import lib.exceptions.EmptyCollectionException;
 import lib.lists.ArrayUnorderedList;
 
@@ -87,9 +88,4 @@ public class CreepingSystem implements Runnable {
 		}
 	}
 
-	public synchronized void addTask(Task task) {
-		synchronized (this.kernel) {
-			this.kernel.addTask(task);
-		}
-	}
 }

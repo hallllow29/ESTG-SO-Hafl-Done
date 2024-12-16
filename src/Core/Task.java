@@ -5,7 +5,7 @@ import lib.exceptions.ElementNotFoundException;
 import lib.exceptions.EmptyCollectionException;
 import lib.lists.LinkedUnorderedList;
 
-public class Task implements Comparable<Task> {
+public class  Task implements Comparable<Task> {
 
 	private final String name;
 	private final Priority priority;

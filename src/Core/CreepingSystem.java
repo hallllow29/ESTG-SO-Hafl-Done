@@ -12,7 +12,7 @@ public class CreepingSystem implements Runnable {
 		this.isRunning = false;
 	}
 
-	public void start() {
+	public synchronized void start() {
 		if (this.isRunning) {
 			System.out.println("CREEPING SYSTEM ALREADY RUNNING");
 			return;
@@ -21,7 +21,6 @@ public class CreepingSystem implements Runnable {
 		System.out.println("CREEPING SYSTEM STARTING...");
 
 		this.isRunning = true;
-
 		this.thread = new Thread(this);
 		thread.start();
 
@@ -31,7 +30,7 @@ public class CreepingSystem implements Runnable {
 
 	}
 
-	public void stop() {
+	public synchronized void stop() {
 		if (!this.isRunning) {
 			System.out.println("CREEPING SYSTEM ALREADY STOPPED");
 			return;
@@ -52,7 +51,6 @@ public class CreepingSystem implements Runnable {
 	}
 
 	public void run() {
-
 		while (this.isRunning) {
 			this.kernel.processNextTask();
 			try {

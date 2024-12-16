@@ -1,3 +1,5 @@
+import Enums.Status;
+
 public class CPU {
 
 	private final static long TIME_SLICE = 1000;
