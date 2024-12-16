@@ -1,32 +1,57 @@
+import Core.CreepingSystem;
+import Core.Kernel;
+import Core.Task;
+import Enums.Priority;
+
 public class Main {
 
 	public static void main(String[] args) {
-
 
 		Kernel kernel = new Kernel();
 		CreepingSystem creepingSystem = new CreepingSystem(kernel);
 
 		creepingSystem.start();
+ 		Task memoryHog1 = new Task("MemoryHog1", Priority.HIGH);
+        Task memoryHog2 = new Task("MemoryHog2", Priority.HIGH);
 
-		Task task_1 = new Task("Task_1", 1, 0, 24, DeviceType.INPUT);
-		Task task_2 = new Task("Task_2", 2, 0, 200, DeviceType.OUTPUT);
-		Task task_3 = new Task("Task_3", 3, 0, 50, DeviceType.INPUT);
+        memoryHog1.setMemorySize(512);
+        memoryHog2.setMemorySize(512);
 
-		creepingSystem.addTask(task_1);
-		creepingSystem.addTask(task_2);
-		creepingSystem.addTask(task_3);
+        creepingSystem.addTask(memoryHog1);
+        creepingSystem.addTask(memoryHog2);
 
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			System.err.println(e.getMessage());
-		}
-		creepingSystem.stop();
+        Task longTask1 = new Task("LongTask1", Priority.MEDIUM);
+        Task longTask2 = new Task("LongTask2", Priority.MEDIUM);
 
-		System.out.println("Task " + task_1.getName() + " Status " + task_1.getStatus());
-		System.out.println("Task " + task_2.getName() + " Status " + task_2.getStatus());
-		System.out.println("Task " + task_3.getName() + " Status " + task_3.getStatus());
+        longTask1.setDuration(3000);
+        longTask2.setDuration(3000);
+
+        creepingSystem.addTask(longTask1);
+        creepingSystem.addTask(longTask2);
+
+        Task displayTask1 = new Task("DisplayTask1", Priority.LOW);
+        Task displayTask2 = new Task("DisplayTask2", Priority.LOW);
+
+        // Aqui elas precisam de o mesmo dispostivo temos que analisar isto...
+        displayTask1.addDevice("DISPLAY");
+        displayTask2.addDevice("DISPLAY");
+
+        creepingSystem.addTask(displayTask1);
+        creepingSystem.addTask(displayTask2);
+
+        // Opah se calhar mais de 10 de segundos faz a diferenca.
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        creepingSystem.stop();
+
+        System.out.println("\nFINAL RESULTS");
+        // TODO: Através do kernel vai se buscar os trackings da memory
+        // System.out.println("USED MEMEORY: " + memory.getTotalMemoryUsed());
+        // System.out.println("TASK COMPLETED: " + kernel.getCompletedTaskCount());
 	}
-
 
 }
