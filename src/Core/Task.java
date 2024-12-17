@@ -5,7 +5,7 @@ import lib.exceptions.ElementNotFoundException;
 import lib.exceptions.EmptyCollectionException;
 import lib.lists.LinkedUnorderedList;
 
-public class  Task implements Comparable<Task> {
+public class Task implements Comparable<Task> {
 
 	private final String name;
 	private final Priority priority;
@@ -51,6 +51,7 @@ public class  Task implements Comparable<Task> {
 	public void setDuration(int duration) {
 		this.duration = duration;
 	}
+
 	public void setStatus(Status status) {
 		this.status = status;
 	}
@@ -65,13 +66,17 @@ public class  Task implements Comparable<Task> {
 		}
 	}
 
-	 public void removeRequiredDevice(String deviceName) {
-        try {
+	public void removeRequiredDevice(String deviceName) {
+		try {
 			this.deviceList.remove(deviceName);
 		} catch (EmptyCollectionException | ElementNotFoundException e) {
 			System.out.println();
 		}
-    }
+	}
+
+	public LinkedUnorderedList<String> neededDevices() {
+		return this.deviceList;
+	}
 
 	@Override
 	public int compareTo(Task other) {

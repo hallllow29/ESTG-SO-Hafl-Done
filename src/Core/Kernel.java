@@ -1,5 +1,6 @@
 package Core;
 import lib.exceptions.EmptyCollectionException;
+import lib.lists.LinkedUnorderedList;
 import lib.trees.PriorityQueue;
 
 
@@ -118,6 +119,16 @@ public class Kernel {
 		if (!memory.allocateFF(task)) {
 			return false;
 		}
+
+		LinkedUnorderedList<String> devicesTask = task.neededDevices();
+		for (String deviceName : devicesTask) {
+			if (!devices.isDeviceAvailable(deviceName)) {
+				System.out.println("DEVICE " + deviceName + " IS NOT AVAILABLE");
+				return false;
+			}
+		}
+
+
 
 		return true;
 	}
