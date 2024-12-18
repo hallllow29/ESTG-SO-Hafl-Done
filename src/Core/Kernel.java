@@ -106,7 +106,12 @@ public class Kernel {
 					} else {
 						System.out.println("RESOURCES NOT AVAILABLE FOR TASK: " + nextTask.getName());
 						synchronized (taskPriorityQueue) {
-							taskPriorityQueue.addElement(nextTask, nextTask.getPriority().ordinal()); // Recoloca na fila
+							if (!memory.hasAvailableMemory(nextTask.getMemorySize())) {
+								System.out.println("TASK '" + nextTask.getName() + "' REQUIRES MORE MEMORY THAN AVAILABLE");
+							} else {
+								taskPriorityQueue.addElement(nextTask, nextTask.getPriority().ordinal());
+							}
+
 						}
 					}
 				}).start();
@@ -140,6 +145,7 @@ public class Kernel {
 		try {
 			this.memory.freeMemory(task.getName());
 			System.out.println("RESOURCES RELEASED FOR TASK '" + task.getName() + "'");
+			this.memory.printMemoryStatus();
 		} catch (Exception e) {
 			System.err.println("ERROR RELEASING RESOURCES FOR TASK '" + task.getName() + "': " + e.getMessage());
 		} catch (NotElementComparableException e) {

@@ -32,11 +32,9 @@ public class CreepingSystem implements Runnable {
 		System.out.println("[" + System.currentTimeMillis() + "] CREEPING SYSTEM STARTING...");
 		this.isRunning = true;
 
-		// Inicializa a thread principal do sistema
 		this.thread = new Thread(this, "CreepingSystem-Thread");
 		this.thread.start();
 
-		// Inicia o kernel
 		kernel.start();
 		System.out.println("[" + System.currentTimeMillis() + "] CREEPING SYSTEM STARTED");
 	}
@@ -53,18 +51,16 @@ public class CreepingSystem implements Runnable {
 		System.out.println("[" + System.currentTimeMillis() + "] CREEPING SYSTEM STOPPING...");
 		this.isRunning = false;
 
-		// Solicita interrupção da thread
 		if (this.thread != null) {
 			this.thread.interrupt();
 			try {
-				this.thread.join(); // Aguarda o término da thread
+				this.thread.join();
 			} catch (InterruptedException e) {
 				System.err.println("ERROR STOPPING CREEPING SYSTEM: " + e.getMessage());
 				Thread.currentThread().interrupt();
 			}
 		}
 
-		// Para o kernel
 		kernel.stop();
 		System.out.println("[" + System.currentTimeMillis() + "] CREEPING SYSTEM STOPPED");
 	}
@@ -80,7 +76,7 @@ public class CreepingSystem implements Runnable {
 				Thread.sleep(THREAD_SLEEP_TIME);
 			} catch (InterruptedException e) {
 				System.err.println("CREEPING SYSTEM INTERRUPTED: " + e.getMessage());
-				Thread.currentThread().interrupt(); // Restaura o estado de interrupção
+				Thread.currentThread().interrupt();
 			}
 		}
 	}

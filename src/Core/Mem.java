@@ -71,8 +71,8 @@ public class Mem {
             return false;
         }
 
-        long startTime = System.currentTimeMillis(); // Marca o início do tempo limite
-        long timeout = 2000; // Tempo limite de 2 segundos
+        long startTime = System.currentTimeMillis();
+        long timeout = 2000;
 
         synchronized (memoryFree) {
             while (true) {
@@ -86,18 +86,18 @@ public class Mem {
                         memoryBlocks.put(newBlock.getId(), newBlock);
                         totalMemoryUsed += task.getMemorySize();
                         System.out.println("MEMORY ALLOCATED FOR TASK: " + task.getName() + " AT ADDRESS: " + startAddress);
+                        printMemoryStatus();
                         return true;
                     }
                 }
 
-                // Verifica o tempo limite
                 if (System.currentTimeMillis() - startTime >= timeout) {
                     System.out.println("TIMEOUT: MEMORY NOT AVAILABLE FOR TASK: " + task.getName());
                     return false;
                 }
 
                 try {
-                    memoryFree.wait(500); // Aguarda por 500ms para tentar novamente
+                    memoryFree.wait(500);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     return false;
@@ -210,17 +210,20 @@ public class Mem {
             MemoryBlock currentBlock = current.getElement();
             MemoryBlock nextBlock = current.getNext().getElement();
 
-            // Verifica se os blocos são adjacentes
             if (currentBlock.getStartAddress() + currentBlock.getSize() == nextBlock.getStartAddress()) {
-                currentBlock.setSize(currentBlock.getSize() + nextBlock.getSize()); // Mescla os blocos
+                currentBlock.setSize(currentBlock.getSize() + nextBlock.getSize());
                 try {
-                    memoryFree.remove(nextBlock); // Remove o bloco mesclado
+                    memoryFree.remove(nextBlock);
                 } catch (EmptyCollectionException | ElementNotFoundException e) {
                     System.err.println("ERROR MERGING BLOCKS: " + e.getMessage());
                 }
             } else {
-                current = current.getNext(); // Avança para o próximo par de blocos
+                current = current.getNext();
             }
         }
+    }
+
+    public int getTotalMemory() {
+        return MAX_MEMORY_SIZE;
     }
 }

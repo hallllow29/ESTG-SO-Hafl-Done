@@ -81,7 +81,7 @@ public class CPU {
 
 		taskThread.start();
 		try {
-			taskThread.join(2000); // Timeout de 2 segundos
+			taskThread.join(duration + 500);
 			if (taskThread.isAlive()) {
 				taskThread.interrupt();
 				Logger.log("TIMEOUT: TASK " + task.getName() + " INTERRUPTED");

@@ -4,14 +4,13 @@ import Enums.Priority;
 
 public class Main {
     public static void main(String[] args) {
-        // Inicializa o sistema
         CreepingSystem creepingSystem = new CreepingSystem(new Core.Kernel());
 
         System.out.println("STARTING CREEPING SYSTEM...");
         creepingSystem.start();
 
         System.out.println("\n=== TEST 1: MEMORY ALLOCATION ===");
-        // Adiciona tarefas que ocupam memória
+
         Task task1 = new Task("Task1", Priority.HIGH);
         task1.setMemorySize(256);
 
@@ -37,15 +36,14 @@ public class Main {
         creepingSystem.addTask(task5);
         creepingSystem.addTask(task6);
 
-        // Aguarda a execução das tarefas
         try {
-            Thread.sleep(10000); // Espera 10 segundos para todas as tarefas serem processadas
+            Thread.sleep(10000);
         } catch (InterruptedException e) {
             System.err.println("MAIN THREAD INTERRUPTED: " + e.getMessage());
         }
 
         System.out.println("\n=== TEST 2: MEMORY REUSE AFTER TASK COMPLETION ===");
-        // Adiciona mais tarefas para verificar reutilização da memória liberada
+
         Task task7 = new Task("Task7", Priority.HIGH);
         task7.setMemorySize(512);
 
@@ -56,7 +54,7 @@ public class Main {
         creepingSystem.addTask(task8);
 
         try {
-            Thread.sleep(5000); // Aguarda execução das novas tarefas
+            Thread.sleep(5000);
         } catch (InterruptedException e) {
             System.err.println("MAIN THREAD INTERRUPTED: " + e.getMessage());
         }

@@ -51,7 +51,6 @@ public class Device {
      */
     public boolean requestUse(long timeout) {
         try {
-            // Tenta adquirir o semáforo dentro do tempo especificado
             if (semaphore.tryAcquire(timeout, TimeUnit.MILLISECONDS)) {
                 synchronized (this) {
                     if (!this.connected || this.busy) {

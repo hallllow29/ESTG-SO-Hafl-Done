@@ -1,9 +1,17 @@
 package Enums;
 
 public enum Priority {
-	HIGH,
-	MID_HIGH,
-	MEDIUM,
-	MID_LOW,
-	LOW;
+	HIGH(0),
+	MEDIUM(1),
+	LOW(2);
+
+	private final int priority;
+
+	Priority(int priority) {
+		this.priority = priority;
+	}
+
+	public int getPriority() {
+		return priority;
+	}
 }

@@ -83,7 +83,7 @@ public class Server implements Runnable {
                         service.process();
                     }
                 }
-                Thread.sleep(500); // Intervalo entre verificações
+                Thread.sleep(10000);
             } catch (InterruptedException e) {
                 System.err.println("SERVER INTERRUPTED: " + e.getMessage());
                 Thread.currentThread().interrupt();
