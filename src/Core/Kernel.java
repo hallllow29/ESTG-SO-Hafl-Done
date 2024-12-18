@@ -165,4 +165,8 @@ public class Kernel {
 		}
 		return true;
 	}
+
+	public Devices getDevices() {
+		return devices;
+	}
 }
