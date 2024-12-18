@@ -1,5 +1,11 @@
 package Core;
 
+/**
+ * The {@code CreepingSystem} class represents a system that manages the execution
+ * of tasks in conjunction with an instance of the {@code Kernel}. It operates
+ * in a loop, processing tasks and interacting with the kernel for task management.
+ * This class is implemented as a runnable and runs its processing logic in a separate thread.
+ */
 public class CreepingSystem implements Runnable {
 
 	private static final int THREAD_SLEEP_TIME = 1000; // Tempo de espera no loop (ms)
@@ -92,18 +98,5 @@ public class CreepingSystem implements Runnable {
 		}
 		this.kernel.addTask(task);
 		System.out.println("TASK " + task.getName() + " ADDED TO CREEPING SYSTEM");
-	}
-
-	/**
-	 * Retorna se o sistema está em execução.
-	 *
-	 * @return true se o sistema estiver em execução.
-	 */
-	public synchronized boolean isRunning() {
-		return this.isRunning;
-	}
-
-	public Kernel getKernel() {
-		return kernel;
 	}
 }

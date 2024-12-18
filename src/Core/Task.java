@@ -9,20 +9,61 @@ import lib.lists.LinkedUnorderedList;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents a task with specific attributes such as name, priority, duration, memory size,
+ * required devices, and status. Tasks can be compared by priority.
+ */
 public class Task implements Comparable<Task> {
 
-	private final String name; // Nome da tarefa
-	private final Priority priority; // Prioridade da tarefa
-	private long duration; // Duração da tarefa em ms
-	private int memorySize; // Tamanho da memória necessária
-	private LinkedUnorderedList<String> deviceList; // Lista de dispositivos associados
-	private Status status; // Status atual da tarefa
+	/**
+	 * The name of the task, used to uniquely identify or describe the task.
+	 * This field is immutable and initialized during the creation of a Task object.
+	 */
+	private final String name;
 
 	/**
-	 * Construtor da tarefa com valores padrão.
+	 * Represents the priority level of the task.
+	 * This variable holds a value of the {@link Priority} enum,
+	 * indicating whether the task has a HIGH, MEDIUM, or LOW priority.
+	 * It is immutable and must be provided during task creation.
+	 */
+	private final Priority priority;
+
+	/**
+	 * Represents the duration of the task in milliseconds.
+	 * This value is used to indicate the total time allocated or consumed by the task.
+	 */
+	private long duration;
+
+	/**
+	 * Represents the memory size required for a task.
+	 * This field is used to determine the amount of memory allocated
+	 * or needed during the execution of the task.
+	 */
+	private int memorySize;
+
+	/**
+	 * Represents an unordered list of devices required for the execution of a task.
+	 * This list maintains the names of the devices and allows operations such as
+	 * addition, removal, and checking the existence of devices in the list.
+	 * The list is implemented using a LinkedUnorderedList for efficient manipulation of elements.
+	 */
+	private LinkedUnorderedList<String> deviceList;
+
+	/**
+	 * Represents the current status of the task.
+	 * The status can be one of the following: READY, RUNNING, PAUSED, WAITING, or COMPLETED.
+	 */
+	private Status status;
+
+	/**
+	 * Constructs a new Task with the specified name and priority.
+	 * Initializes the task with default values for duration (1000 ms),
+	 * memory size (0 MB), an empty list of required devices, and a
+	 * status of WAITING.
 	 *
-	 * @param name     Nome da tarefa.
-	 * @param priority Prioridade da tarefa.
+	 * @param name The name or description of the task.
+	 * @param priority The priority level of the task (e.g., HIGH, MEDIUM, LOW).
 	 */
 	public Task(String name, Priority priority) {
 		this.name = name;
@@ -33,29 +74,46 @@ public class Task implements Comparable<Task> {
 		this.status = Status.WAITING;
 	}
 
-	// Getters
+	/**
+	 * Retrieves the name or description of the task.
+	 *
+	 * @return The name of the task.
+	 */
 	public String getName() {
 		return this.name;
 	}
 
+	/**
+	 * Retrieves the amount of memory required by the task.
+	 *
+	 * @return The memory size required by the task in megabytes (MB).
+	 */
 	public int getMemorySize() {
 		return this.memorySize;
 	}
 
+	/**
+	 * Retrieves the duration of the task.
+	 *
+	 * @return The duration of the task in milliseconds.
+	 */
 	public long getDuration() {
 		return this.duration;
 	}
 
-	public Status getStatus() {
-		return this.status;
-	}
-
+	/**
+	 * Retrieves the priority level of the task.
+	 *
+	 * @return The priority of the task, represented as an instance of the Priority enum.
+	 */
 	public Priority getPriority() {
 		return this.priority;
 	}
 
 	/**
-	 * Retorna uma cópia da lista de dispositivos necessários.
+	 * Retrieves a list of devices associated with the task.
+	 *
+	 * @return A list of device names as strings.
 	 */
 	public List<String> getDevices() {
 		List<String> devices = new ArrayList<>();
@@ -65,7 +123,15 @@ public class Task implements Comparable<Task> {
 		return devices;
 	}
 
-	// Setters
+	/**
+	 * Sets the memory size required by the task.
+	 * The memory size must be a non-negative integer. If a negative value is passed,
+	 * an IllegalArgumentException will be thrown.
+	 *
+	 * @param memorySize The memory size required by the task in megabytes (MB).
+	 *                   Must be a non-negative integer.
+	 * @throws IllegalArgumentException If the specified memory size is negative.
+	 */
 	public void setMemorySize(int memorySize) {
 		if (memorySize < 0) {
 			throw new IllegalArgumentException("Memory size cannot be negative.");
@@ -73,6 +139,13 @@ public class Task implements Comparable<Task> {
 		this.memorySize = memorySize;
 	}
 
+	/**
+	 * Sets the duration of the task.
+	 * The duration must be a positive value, otherwise an IllegalArgumentException is thrown.
+	 *
+	 * @param duration The duration of the task in milliseconds. Must be greater than zero.
+	 * @throws IllegalArgumentException If the specified duration is less than or equal to zero.
+	 */
 	public void setDuration(long duration) {
 		if (duration <= 0) {
 			throw new IllegalArgumentException("Duration must be greater than zero.");
@@ -80,41 +153,15 @@ public class Task implements Comparable<Task> {
 		this.duration = duration;
 	}
 
+	/**
+	 * Sets the status of the task.
+	 *
+	 * @param status The new status to be assigned to the task. Must be a valid instance of the Status enum.
+	 */
 	public void setStatus(Status status) {
 		this.status = status;
 	}
 
-	/**
-	 * Adiciona um dispositivo necessário à tarefa.
-	 *
-	 * @param deviceName Nome do dispositivo.
-	 */
-	public void addDevice(String deviceName) {
-		try {
-			if (!this.deviceList.contains(deviceName)) {
-				this.deviceList.addToRear(deviceName);
-				System.out.println("DEVICE " + deviceName + " ADDED TO TASK " + getName());
-			} else {
-				System.out.println("DEVICE " + deviceName + " ALREADY EXISTS IN TASK " + getName());
-			}
-		} catch (EmptyCollectionException e) {
-			System.err.println("FAILED TO ADD DEVICE: " + deviceName);
-		}
-	}
-
-	/**
-	 * Remove um dispositivo necessário da tarefa.
-	 *
-	 * @param deviceName Nome do dispositivo.
-	 */
-	public void removeRequiredDevice(String deviceName) {
-		try {
-			this.deviceList.remove(deviceName);
-			System.out.println("DEVICE " + deviceName + " REMOVED FROM TASK " + getName());
-		} catch (EmptyCollectionException | ElementNotFoundException e) {
-			System.err.println("FAILED TO REMOVE DEVICE: " + deviceName + ". NOT FOUND.");
-		}
-	}
 
 	/**
 	 * Compara as tarefas com base na prioridade.

@@ -7,11 +7,48 @@ import javax.swing.*;
 import java.util.LinkedList;
 import java.util.Scanner;
 
+/**
+ * MainMenu is the entry point for a system that simulates task management
+ * and resource monitoring operations. It provides a menu-based interface
+ * to manage tasks, interact with the CreepingSystem, and display memory usage.
+ * The class contains static methods to handle user input, add tasks, display
+ * memory usage, and save system state to a JSON file.
+ */
 public class MainMenu {
 
+    /**
+     * A LinkedList to store memory usage data, represented as integers.
+     * This list is used to record or analyze memory usage over a period of time.
+     */
     private static LinkedList<Integer> memoryUsageData = new LinkedList<>();
+
+    /**
+     * The `tasks` variable is a static instance of `ArrayUnorderedList<Task>`
+     * that holds a collection of tasks. It serves as a central storage for task
+     * management within the `MainMenu` class.
+     */
     private static ArrayUnorderedList<Task> tasks = new ArrayUnorderedList<>();
 
+    /**
+     * Displays and manages the main menu for interacting with the Creeping System application.
+     * This method provides a console-based user interface that allows users to perform various
+     * actions on the Creeping System, such as starting/stopping the system, adding tasks,
+     * viewing memory usage, saving system data to JSON, or exiting the menu.
+     *
+     * The main menu operates in a loop until the user chooses to exit. Based on the selected
+     * option, the appropriate functionality is triggered.
+     *
+     * Menu Options:
+     * 1. Start the Creeping System.
+     * 2. Stop the Creeping System.
+     * 3. Add a task to the system.
+     * 4. Display a chart of memory usage data.
+     * 5. Save the system's tasks to a JSON file.
+     * 6. Exit the menu.
+     *
+     * Exceptions:
+     * - If user input is not an integer, the loop iterates without executing any action.
+     */
     public static void mainMenu() {
         boolean running = true;
         CreepingSystem creepingSystem = new CreepingSystem(new Kernel());
@@ -58,6 +95,19 @@ public class MainMenu {
         }
     }
 
+    /**
+     * Adds a new task to the CreepingSystem and the task list. The method prompts
+     * the user for task details such as description, priority, duration, and memory size.
+     *
+     *  The task is then created and added to both the CreepingSystem and the task queue within
+     * the main application.
+     *
+     * Input validation is performed for priority, duration, and memory size, and any invalid
+     * inputs will result in the task not being added.
+     *
+     * @param creepingSystem The instance of CreepingSystem to which the task is added.
+     * @param scanner        The Scanner instance used to read user input for task details.
+     */
     private static void addTask(CreepingSystem creepingSystem, Scanner scanner) {
         System.out.println("Enter the task description:");
         String name = scanner.next();
@@ -101,6 +151,15 @@ public class MainMenu {
 
     }
 
+    /**
+     * Displays a memory usage chart in a new window.
+     *
+     * The method executes the GUI-related operations on the Event Dispatch Thread (EDT)
+     * to ensure thread safety, using SwingUtilities.invokeLater.
+     *
+     * The memory usage data used for the chart is expected to be sourced from the
+     * memoryUsageData field of the containing class.
+     */
     private static void showMemoryUsageChart() {
         SwingUtilities.invokeLater(() -> {
             MemoryUsageChart example = new MemoryUsageChart("Memory Usage Chart", memoryUsageData);

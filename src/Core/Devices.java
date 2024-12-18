@@ -4,11 +4,49 @@ import Enums.DeviceType;
 import lib.HasTables.HashMap;
 import lib.exceptions.EmptyCollectionException;
 
+/**
+ * The Devices class manages a collection of devices,*/
 public class Devices {
 
-    private final HashMap<String, Device> devices; // Mapa de dispositivos
-    private boolean isRunning; // Indica se os dispositivos estão ativos
+    /**
+     * A map storing devices where the key represents the unique name of the device
+     * and the value is the corresponding {@code Device} instance.
+     *
+     * This map is primarily used to manage and control the collection of devices,
+     * providing methods to initialize, start, stop, check availability, request usage,
+     * release usage, and list the current state of devices.
+     *
+     * The key in this map is the unique identifier {@code String} for each device,
+     * which prevents duplicate entries and facilitates quick lookup operations.
+     * The value is the {@code Device} object representing the specific hardware device
+     * along with its properties and state.
+     *
+     * The collection supports synchronized operations to ensure thread-safety when performing
+     * actions on devices in multi-threaded environments.
+     */
+    private final HashMap<String, Device> devices;
 
+    /**
+     * Indicates whether the devices in the system are currently running.
+     *
+     * This variable acts as a flag for tracking the operational state of the devices.
+     * It is used by various methods in the class to determine whether device-related
+     * operations, such as starting or stopping devices, should proceed.
+     *
+     * When set to {@code true}, the devices are considered to be operational (running).
+     * When set to {@code false}, the devices are not operational (stopped).
+     */
+    private boolean isRunning;
+
+    /**
+     * Constructs a new Devices instance, initializing the internal device map and setting the
+     * running state to false. This constructor also attempts to initialize devices by invoking
+     * the `initDevices` method. If device initialization fails due to an empty collection,
+     * an error message is printed to the standard error stream.
+     *
+     * The created instance is ready to manage connected devices through its methods, either
+     * starting them, stopping them, or verifying their status.
+     */
     public Devices() {
         this.devices = new HashMap<>();
         this.isRunning = false;
@@ -20,7 +58,12 @@ public class Devices {
     }
 
     /**
-     * Inicializa os dispositivos com tipos e nomes padrão.
+     * Initializes the internal collection of devices by populating it with predefined
+     * input and output devices. Devices such as "DISPLAY", "KEYBOARD", "MOUSE",
+     * "SPEAKER", and "MICROPHONE" are instantiated and added with their respective types.
+     *
+     * @throws EmptyCollectionException if the internal collection is empty or cannot
+     *         hold the provided device mappings.
      */
     private synchronized void initDevices() throws EmptyCollectionException {
         devices.put("DISPLAY", new Device("DISPLAY", DeviceType.OUTPUT));
@@ -32,7 +75,17 @@ public class Devices {
     }
 
     /**
-     * Inicia todos os dispositivos conectando-os.
+     * Starts all devices managed by the `Devices` class. This method ensures that the devices are
+     * only started if they are not already running.
+     *
+     * If the devices are already running, a message indicating this state is logged, and the method
+     * terminates without any further action. Otherwise, the method initializes the starting sequence
+     * by connecting all available devices and marking the `isRunning` flag as true, showing that the
+     * devices are now actively managed.
+     *
+     * Thread-safety is guaranteed by the `synchronized` modifier, ensuring that only one thread
+     * can execute this method at a time.
+     *
      */
     public synchronized void start() {
         if (this.isRunning) {
@@ -49,7 +102,14 @@ public class Devices {
     }
 
     /**
-     * Desliga todos os dispositivos, desconectando-os.
+     * Stops the operation of all devices managed by the {@code Devices} instance.
+     *
+     * This method ensures that the devices are stopped only if they are currently running.
+     * If the devices are not in a running state, a message will be logged indicating
+     * that they are already stopped, and no further action will be taken.
+     *
+     * Thread-safety is guaranteed by the synchronized modifier, ensuring that only
+     * one thread can execute this method at a time.
      */
     public synchronized void stop() {
         if (!this.isRunning) {
@@ -63,86 +123,5 @@ public class Devices {
         }
         this.isRunning = false;
         System.out.println("DEVICES STOPPED");
-    }
-
-    /**
-     * Verifica se um dispositivo específico está disponível para uso.
-     *
-     * @param name Nome do dispositivo.
-     * @return true se o dispositivo estiver conectado e não estiver em uso.
-     */
-    public synchronized boolean isDeviceAvailable(String name) {
-        try {
-            Device device = devices.get(name);
-            return device != null && device.isConnected() && !device.isBusy();
-        } catch (EmptyCollectionException e) {
-            System.err.println("DEVICE NOT FOUND: " + e.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Solicita o uso de um dispositivo específico com timeout.
-     *
-     * @param name Nome do dispositivo.
-     * @param timeout Tempo máximo de espera (em milissegundos).
-     * @return true se o uso do dispositivo for concedido dentro do timeout.
-     */
-    public synchronized boolean requestDevice(String name, long timeout) {
-        if (!this.isRunning) {
-            System.out.println("DEVICES ARE NOT RUNNING");
-            return false;
-        }
-
-        try {
-            Device device = devices.get(name);
-            if (device == null) {
-                System.err.println("DEVICE DOES NOT EXIST: " + name);
-                return false;
-            }
-            // Solicita o uso do dispositivo com timeout
-            if (device.requestUse(timeout)) {
-                System.out.println("[" + System.currentTimeMillis() + "] DEVICE ACQUIRED -> " + name);
-                return true;
-            } else {
-                System.out.println("[" + System.currentTimeMillis() + "] TIMEOUT: DEVICE '" + name + "' IS BUSY OR NOT AVAILABLE");
-                return false;
-            }
-        } catch (EmptyCollectionException e) {
-            System.err.println("REQUEST DEVICE FAILED: " + e.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * Libera o uso de um dispositivo específico.
-     *
-     * @param name Nome do dispositivo.
-     */
-    public synchronized void releaseDevice(String name) {
-        try {
-            Device device = devices.get(name);
-            if (device != null) {
-                device.releaseUse();
-                System.out.println("[" + System.currentTimeMillis() + "] DEVICE RELEASED -> " + name);
-            } else {
-                System.err.println("DEVICE '" + name + "' NOT FOUND");
-            }
-        } catch (EmptyCollectionException e) {
-            System.err.println("RELEASE DEVICE FAILED: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Lista o status de todos os dispositivos.
-     */
-    public synchronized void listDevices() {
-        System.out.println("\n=== DEVICES STATUS ===");
-        for (Device device : devices.getValues()) {
-            System.out.println(device.getName() + ": " +
-                    (device.isConnected() ? "Connected" : "Disconnected") +
-                    (device.isBusy() ? " (In Use)" : " (Available)"));
-        }
-        System.out.println("========================\n");
     }
 }

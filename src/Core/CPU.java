@@ -15,7 +15,6 @@ public class CPU {
 	 * This field is managed internally to track and control CPU behavior during task execution.
 	 *
 	 * @see CPUState
-	 * @see CPU#getState()
 	 */
 	private CPUState state;
 
@@ -178,19 +177,15 @@ public class CPU {
 		}
 	}
 
+	/**
+	 * Executes a single task using the CPU.
+	 * This method ensures that the task is executed in a thread-safe manner,
+	 * allowing only one task to be processed at a time.
+	 *
+	 * @param task The task to be executed. Must not be null and should have a valid duration set.
+	 */
 	public synchronized void executeOneTask(Task task) {
 		runTask(task, task.getDuration());
 	}
 
-	public synchronized void executeTaskDuration(Task task, long duration) {
-		runTask(task, duration);
-	}
-
-	public synchronized int getCompletedTasks() {
-		return this.completedTasks;
-	}
-
-	public synchronized CPUState getState() {
-		return this.state;
-	}
 }
