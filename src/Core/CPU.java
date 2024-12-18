@@ -1,106 +1,121 @@
 package Core;
+
 import Enums.CPUState;
 import Enums.Status;
 
 public class CPU {
 
-	private CPUState state;
-	// Core.CPU has a taskLinkedQueue of tasks to be executed
-	private boolean isAvailable;
-	private boolean isRunning;
-	private int completedTasks;
+	private CPUState state; // Estado da CPU (RUNNING, STOPPED, etc.)
+	private boolean isAvailable; // Define se a CPU está disponível
+	private int completedTasks; // Contador de tarefas concluídas
 
 	public CPU() {
-		this.isRunning = false;
+		this.state = CPUState.STOPPED;
 		this.isAvailable = true;
 		this.completedTasks = 0;
+		Logger.log("CPU INITIALIZED - STATE: STOPPED, AVAILABLE: TRUE");
 	}
 
 	public synchronized boolean isAvailable() {
-		return this.isRunning && this.isAvailable;
+		return this.isAvailable;
 	}
 
-	public synchronized	void start() {
-		if (this.isRunning) {
-			System.out.println("Core.CPU ALREADY STARTED");
+	public synchronized void start() {
+		if (this.state == CPUState.RUNNING) {
+			Logger.log("CPU ALREADY STARTED");
+			System.out.println("[" + System.currentTimeMillis() + "] CPU ALREADY STARTED");
 			return;
 		}
 
-		System.out.println("Core.CPU STARTING...");
-		isAvailable = true;
-		isRunning = true;
-		System.out.println("Core.CPU STARTED");
+		Logger.log("CPU STARTING...");
+		System.out.println("[" + System.currentTimeMillis() + "] CPU STARTING...");
+		this.state = CPUState.RUNNING;
+		this.isAvailable = true;
+		Logger.log("CPU STARTED");
+		System.out.println("[" + System.currentTimeMillis() + "] CPU STARTED");
 	}
 
 	public synchronized void stop() {
-		if (!this.isRunning) {
-			System.out.println("Core.CPU ALREADY STOPPED");
+		if (this.state == CPUState.STOPPED) {
+			Logger.log("CPU ALREADY STOPPED");
+			System.out.println("[" + System.currentTimeMillis() + "] CPU ALREADY STOPPED");
 			return;
 		}
 
-		System.out.println("Core.CPU STOPPING");
-		isAvailable = false;
-		isRunning = false;
-		System.out.println("Core.CPU STOPPED");
+		Logger.log("CPU STOPPING...");
+		System.out.println("[" + System.currentTimeMillis() + "] CPU STOPPING...");
+		this.state = CPUState.STOPPED;
+		this.isAvailable = false;
+		Logger.log("CPU STOPPED");
+		System.out.println("[" + System.currentTimeMillis() + "] CPU STOPPED");
 	}
 
-	public synchronized void executeOneTask(Task task) {
-		if (!this.isRunning) {
-			System.out.println("Core.CPU IS NOT RUNNING");
+	private synchronized void runTask(Task task, long duration) {
+		if (task == null) {
+			System.out.println("[" + System.currentTimeMillis() + "] TASK CANNOT BE NULL");
+			Logger.log("TASK CANNOT BE NULL");
+			return;
+		}
+
+		if (this.state != CPUState.RUNNING) {
+			Logger.log("CPU IS NOT RUNNING - TASK " + task.getName() + " CANNOT BE EXECUTED");
+			System.out.println("[" + System.currentTimeMillis() + "] CPU IS NOT RUNNING");
+			return;
 		}
 
 		this.isAvailable = false;
-
-		System.out.println("Core.CPU " + Thread.currentThread().getName() + " EXECUTING TASK " + task.getName());
 		task.setStatus(Status.RUNNING);
+		Logger.log("TASK " + task.getName() + " EXECUTING");
+		System.out.println("[" + System.currentTimeMillis() + "] CPU EXECUTING TASK " + task.getName());
 
+		Thread taskThread = new Thread(() -> {
+			try {
+				Thread.sleep(duration);
+			} catch (InterruptedException e) {
+				task.setStatus(Status.PAUSED);
+				Logger.log("TASK " + task.getName() + " INTERRUPTED");
+				System.err.println("[" + System.currentTimeMillis() + "] TASK " + task.getName() + " INTERRUPTED");
+				Thread.currentThread().interrupt();
+			}
+		});
+
+		taskThread.start();
 		try {
-			Thread.sleep(task.getDuration());
+			taskThread.join(2000); // Timeout de 2 segundos
+			if (taskThread.isAlive()) {
+				taskThread.interrupt();
+				Logger.log("TIMEOUT: TASK " + task.getName() + " INTERRUPTED");
+				System.out.println("[" + System.currentTimeMillis() + "] TIMEOUT: TASK " + task.getName() + " INTERRUPTED");
+				task.setStatus(Status.PAUSED);
+			} else {
+				task.setStatus(Status.COMPLETED);
+				Logger.log("TASK " + task.getName() + " COMPLETED");
+				System.out.println("[" + System.currentTimeMillis() + "] TASK " + task.getName() + " COMPLETED");
+				this.completedTasks++;
+			}
 		} catch (InterruptedException e) {
-			task.setStatus(Status.PAUSED);
-			System.err.println("Core.CPU " + Thread.currentThread().getName() + " PAUSED TASK " + task.getName());
+			Logger.log("TASK " + task.getName() + " INTERRUPTED DURING EXECUTION");
+			System.err.println("[" + System.currentTimeMillis() + "] TASK " + task.getName() + " INTERRUPTED DURING EXECUTION");
+			Thread.currentThread().interrupt();
 		} finally {
 			this.isAvailable = true;
-		}
-
-		if (task.getStatus() != Status.PAUSED) {
-			task.setStatus(Status.COMPLETED);
-			System.out.println("Core.CPU COMPLETED TASK " + task.getName());
+			Logger.log("CPU AVAILABLE");
 		}
 	}
 
+	public synchronized void executeOneTask(Task task) {
+		runTask(task, task.getDuration());
+	}
+
 	public synchronized void executeTaskDuration(Task task, long duration) {
-		if (task == null) {
-			System.out.println("TASK CANNOT BE NULL");
-			return;
-		}
-
-		if (!this.isRunning) {
-			System.out.println("CPU IS NOT RUNNING");
-			return;
-		}
-
-		isAvailable = false;
-		System.out.println("CPU " + Thread.currentThread().getName() + " EXECUTING TASK " + task.getName());
-		task.setStatus(Status.RUNNING);
-
-		try {
-			Thread.sleep(duration);
-		} catch (InterruptedException e) {
-			task.setStatus(Status.PAUSED);
-			System.err.println("CPU " + Thread.currentThread().getName() + " PAUSED TASK " + task.getName());
-		} finally {
-			isAvailable = true;
-		}
-
-		if (task.getStatus() != Status.PAUSED) {
-			task.setStatus(Status.COMPLETED);
-			System.out.println("CPU COMPLETED TASK " + task.getName());
-			this.completedTasks++;
-		}
+		runTask(task, duration);
 	}
 
 	public synchronized int getCompletedTasks() {
 		return this.completedTasks;
+	}
+
+	public synchronized CPUState getState() {
+		return this.state;
 	}
 }

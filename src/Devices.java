@@ -88,7 +88,7 @@ public class Devices {
         return device != null && device.isConnected() && !device.isBusy();
     }
 
-    public synchronized boolean requestDevice(String name) throws EmptyCollectionException {
+   /* public synchronized boolean requestDevice(String name) throws EmptyCollectionException {
         if (!this.isRunning) {
             throw new IllegalStateException("Device management is not running");
         }
@@ -100,7 +100,7 @@ public class Devices {
         }
 
         return device.requestUse();
-    }
+    } */
 
     public synchronized void releaseDevice(String name) throws EmptyCollectionException {
         Device device = devices.get(name);

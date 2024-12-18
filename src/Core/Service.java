@@ -1,53 +1,83 @@
 package Core;
+
 public class Service {
 
-    private String name;
-    private boolean isRunning;
+    private final String name; // Nome do serviço
+    private boolean isRunning; // Estado do serviço (ativo ou inativo)
 
+    /**
+     * Construtor do Serviço.
+     *
+     * @param name Nome do serviço.
+     */
     public Service(String name) {
         this.name = name;
         this.isRunning = false;
     }
 
-    public void start() {
+    /**
+     * Inicia o serviço.
+     */
+    public synchronized void start() {
         if (this.isRunning) {
-            System.out.println("SERVICE ALREADY RUNNING");
+            System.out.println("SERVICE '" + name + "' IS ALREADY RUNNING");
             return;
         }
 
-        System.out.println("SERVICE STARTING...");
-
+        System.out.println("SERVICE '" + name + "' STARTING...");
         this.isRunning = true;
-
-        System.out.println("SERVICE STARTED");
-
+        System.out.println("SERVICE '" + name + "' STARTED");
     }
-    public void stop() {
+
+    /**
+     * Para o serviço.
+     */
+    public synchronized void stop() {
         if (!this.isRunning) {
-            System.out.println("SERVICE ALREADY STOPPED");
+            System.out.println("SERVICE '" + name + "' IS ALREADY STOPPED");
             return;
         }
 
-        System.out.println("SERVICE STOPPING...");
-
+        System.out.println("SERVICE '" + name + "' STOPPING...");
         this.isRunning = false;
-
-        System.out.println("SERVICE STOPPED");
+        System.out.println("SERVICE '" + name + "' STOPPED");
     }
 
-    public boolean asksProcess() {
-       if (this.isRunning) {
-           System.out.println("SERVICE ASKS PROCESS");
-           return true;
-       }
-
-        System.out.println("SERVICE DOES NOT ASKS PROCESS");
-       return false;
-
+    /**
+     * Verifica se o serviço está pedindo para processar.
+     *
+     * @return true se o serviço estiver ativo, caso contrário false.
+     */
+    public synchronized boolean asksProcess() {
+        return this.isRunning;
     }
 
-    public void process() {
-        System.out.println("PROCESSING SERVICE");
+    /**
+     * Processa o serviço.
+     */
+    public synchronized void process() {
+        if (this.isRunning) {
+            System.out.println("SERVICE '" + name + "' IS PROCESSING...");
+        } else {
+            System.out.println("SERVICE '" + name + "' IS NOT RUNNING. PROCESS CANNOT BE EXECUTED.");
+        }
     }
 
+    /**
+     * Retorna o nome do serviço.
+     *
+     * @return Nome do serviço.
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Retorna se o serviço está ativo.
+     *
+     * @return true se o serviço estiver em execução.
+     */
+    public synchronized boolean isRunning() {
+        return isRunning;
+    }
 }

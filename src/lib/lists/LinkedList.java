@@ -369,6 +369,23 @@ public class LinkedList <T> implements ListADT<T>, Iterable<T> {
 		return this.modCount;
 	}
 
+	public void clear() {
+		this.front = null;
+		this.rear = null;
+		this.size = 0;
+		this.modCount++;
+	}
+
+	public void addAll(LinkedList<T> otherList) throws NotElementComparableException {
+		if (otherList == null) {
+			throw new IllegalArgumentException("LinkedList");
+		}
+
+		for (T element : otherList) {
+			add(element);
+		}
+	}
+
 
 	public class LinkedListIterator<E> implements Iterator<T> {
 

@@ -1,19 +1,20 @@
 package Core;
-import lib.exceptions.EmptyCollectionException;
-import lib.trees.PriorityQueue;
 
+import lib.exceptions.EmptyCollectionException;
+import lib.exceptions.NotElementComparableException;
+import lib.trees.PriorityQueue;
 
 public class Kernel {
 
-	private CPU cpu;
-	private Mem memory;
-	private Devices devices;
-	private Server server;
-	PriorityQueue<Task> taskPriorityQueue;
-	boolean isRunning;
+	private final CPU cpu;
+	private final Mem memory;
+	private final Devices devices;
+	private final Server server;
+	private final PriorityQueue<Task> taskPriorityQueue;
+	private boolean isRunning;
 
 	public Kernel() {
-		this.taskPriorityQueue = new PriorityQueue<Task>();
+		this.taskPriorityQueue = new PriorityQueue<>();
 		this.cpu = new CPU();
 		this.memory = new Mem();
 		this.devices = new Devices();
@@ -21,296 +22,147 @@ public class Kernel {
 		this.isRunning = false;
 	}
 
-	public boolean isRunning() {
+	public CPU getCpu() {
+		return this.cpu;
+	}
+
+	public Mem getMemory() {
+		return this.memory;
+	}
+
+	public synchronized boolean isRunning() {
 		return this.isRunning;
 	}
 
-	public void start() {
-
+	/**
+	 * Inicializa o Kernel e seus componentes.
+	 */
+	public synchronized void start() {
 		if (this.isRunning) {
 			System.out.println("KERNEL ALREADY STARTED");
 			return;
 		}
 
 		System.out.println("KERNEL STARTING...");
-
-		cpu.start();
-		memory.start();
-		devices.start();
-		server.start();
+		this.cpu.start();
+		this.memory.start();
+		this.devices.start();
+		this.server.start();
 
 		this.isRunning = true;
 		System.out.println("KERNEL STARTED");
 	}
 
-	public void stop() {
-
+	/**
+	 * Encerra o Kernel e seus componentes.
+	 */
+	public synchronized void stop() {
 		if (!this.isRunning) {
 			System.out.println("KERNEL ALREADY STOPPED");
+			return;
 		}
 
 		System.out.println("KERNEL STOPPING...");
-
-		cpu.stop();
-		memory.stop();
-		devices.stop();
-		server.stop();
+		this.cpu.stop();
+		this.memory.stop();
+		this.devices.stop();
+		this.server.stop();
 
 		this.isRunning = false;
 		System.out.println("KERNEL STOPPED");
 	}
 
+	/**
+	 * Adiciona uma nova tarefa à fila de prioridade.
+	 */
 	public synchronized void addTask(Task task) {
-
 		if (!this.isRunning) {
-			System.out.println("KERNEL DID NOT STARTED YET");
+			System.out.println("KERNEL IS NOT RUNNING. START THE KERNEL FIRST.");
 			return;
 		}
 
 		if (taskValid(task)) {
 			taskPriorityQueue.addElement(task, task.getPriority().ordinal());
-			System.out.println("NEW TASK " + task.getName() + " WAS ADDED TO PRIORITY QUEUE.");
+			System.out.println("NEW TASK '" + task.getName() + "' ADDED TO PRIORITY QUEUE.");
 		}
-
 	}
 
+	/**
+	 * Processa a próxima tarefa da fila de prioridade.
+	 */
 	public synchronized void processNextTask() {
-
-		// Either I leave here or in addTask(Core.Task)...
 		if (!this.isRunning) {
-			System.out.println("KERNEL DID NOT STARTED YET");
+			System.out.println("KERNEL IS NOT RUNNING.");
 			return;
 		}
 
-		if (this.taskPriorityQueue.isEmpty() || this.taskPriorityQueue == null) {
-			System.out.println("TASK PRIORITY QUEUE IS EMPTY");
-			return;
-		}
-
-		try {
-			Task nextTask = this.taskPriorityQueue.removeElement();
-			if (validateRessources(nextTask)) {
-
-				cpu.executeOneTask(nextTask);
-
-				releaseResources(nextTask);
-
-			} else {
-				taskPriorityQueue.addElement(nextTask, nextTask.getPriority().ordinal());
+		while (!taskPriorityQueue.isEmpty()) {
+			try {
+				Task nextTask = taskPriorityQueue.removeElement();
+				new Thread(() -> {
+					if (validateResources(nextTask)) {
+						cpu.executeOneTask(nextTask);
+						releaseResources(nextTask);
+					} else {
+						System.out.println("RESOURCES NOT AVAILABLE FOR TASK: " + nextTask.getName());
+						synchronized (taskPriorityQueue) {
+							taskPriorityQueue.addElement(nextTask, nextTask.getPriority().ordinal()); // Recoloca na fila
+						}
+					}
+				}).start();
+			} catch (EmptyCollectionException e) {
+				System.err.println("TASK QUEUE ERROR: " + e.getMessage());
 			}
-		} catch (EmptyCollectionException e) {
-			System.err.println("TASK PRIORITY QUEUE IS EMPTY");
 		}
 	}
 
-	public boolean validateRessources(Task task) {
-
+	/**
+	 * Valida os recursos necessários para uma tarefa.
+	 */
+	private boolean validateResources(Task task) {
 		if (!cpu.isAvailable()) {
-			System.out.println("Core.CPU IS NOT AVAILABLE");
+			System.out.println("CPU IS NOT AVAILABLE FOR TASK '" + task.getName() + "'");
 			return false;
 		}
 
 		if (!memory.hasAvailableMemory(task.getMemorySize())) {
-			System.out.println("MEMORY IS NOT AVAILABLE");
+			System.out.println("MEMORY IS NOT AVAILABLE FOR TASK '" + task.getName() + "'");
 			return false;
 		}
 
-		if (!memory.allocateFF(task)) {
-			return false;
-		}
-
-		return true;
+		return memory.allocateFF(task);
 	}
 
-	private boolean taskValid(Task task) {
+	/**
+	 * Libera os recursos após a execução de uma tarefa.
+	 */
+	private void releaseResources(Task task) {
+		try {
+			this.memory.freeMemory(task.getName());
+			System.out.println("RESOURCES RELEASED FOR TASK '" + task.getName() + "'");
+		} catch (Exception e) {
+			System.err.println("ERROR RELEASING RESOURCES FOR TASK '" + task.getName() + "': " + e.getMessage());
+		} catch (NotElementComparableException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+	/**
+	 * Valida se uma tarefa é válida para adição.
+	 */
+	private boolean taskValid(Task task) {
 		if (task == null) {
 			System.out.println("TASK CANNOT BE NULL");
 			return false;
 		}
-
 		if (task.getDuration() <= 0) {
-			System.out.println("TASK DURATION CANNOT BE ZERO");
+			System.out.println("TASK '" + task.getName() + "' HAS INVALID DURATION");
 			return false;
 		}
-
-		if (task.getName() == null) {
-			System.out.println("TASK NAME CANNOT BE NULL");
+		if (task.getName() == null || task.getName().isEmpty()) {
+			System.out.println("TASK NAME CANNOT BE NULL OR EMPTY");
 			return false;
 		}
-
 		return true;
 	}
-
-	private void releaseResources(Task task) {
-		try {
-			this.memory.freeMemory(task.getName());
-		} catch (Exception e) {
-			System.err.println("Error releasing memory: " + e.getMessage());
-		}
-	}
-
 }
-
-/*
-
-	public synchronized void scheduleTask(Core.Task task) {
-
-		if (!this.isRunning) {
-			System.out.println("Core.CPU IS NOT RUNNING");
-		}
-
-		System.out.println("SCHEDULING TASK: " + task.getName() + " with priority: " + task.getPriority());
-		taskPriorityQueue.addElement(task, task.getPriority());
-
-	}
-
-	public synchronized void scheduleFCFS() {
-
-		if (!this.isRunning) {
-			System.out.println("Core.CPU IS NOT RUNNING");
-			return;
-		}
-
-		if (taskLinkedQueue.isEmpty()) {
-			System.out.println("taskLinkedQueue is empty");
-			return;
-		}
-
-		// As long as the taskLinkedQueue is not empty...
-		while (!taskLinkedQueue.isEmpty()) {
-
-			try {
-				Core.Task nextTask = taskLinkedQueue.dequeue();
-				System.out.println("TASK " + nextTask.getName() + " ADDED TO QUEUE");
-				cpu.executeTaskDuration(nextTask, nextTask.getDuration());
-
-			} catch (EmptyCollectionException e) {
-				System.err.println(e.getMessage());
-				break;
-			}
-		}
-	}
-
-	public synchronized void schedulePreemptive() {
-
-		if (!this.isRunning) {
-			System.out.println("Core.CPU IS NOT RUNNING");
-			return;
-		}
-
-		if (this.taskPriorityQueue.isEmpty()) {
-			System.out.println("taskPriorityQueue is empty");
-			return;
-		}
-
-		while (!this.taskPriorityQueue.isEmpty()) {
-			try {
-				Core.Task nextTask = this.taskPriorityQueue.removeElement();
-				nextTask.setStatus(Enums.Status.RUNNING);
-				System.out.println("TASK " + nextTask.getName() + " with Priority: " + nextTask.getPriority() + " is " + nextTask.getStatus());
-
-				long duration = nextTask.getDuration();
-
-				if (duration < cpu.getTIMESLICE()) {
-					Thread.sleep(duration);
-					nextTask.setStatus(Enums.Status.COMPLETED);
-					System.out.println("TASK " + nextTask.getName() + " is " + nextTask.getStatus());
-				} else {
-					Thread.sleep(cpu.getTIMESLICE());
-					// TODO: Pause the Core.Task
-					nextTask.setDuration(duration - cpu.getTIMESLICE());
-					nextTask.setStatus(Enums.Status.PAUSED);
-					System.out.println("TASK " + nextTask.getName() + " is " + nextTask.getStatus() + " with a duration: " + nextTask.getDuration() + "ms");
-					this.taskPriorityQueue.addElement(nextTask, nextTask.getPriority());
-				}
-
-			} catch (EmptyCollectionException | InterruptedException e) {
-				System.err.println(e.getMessage());
-				break;
-			}
-
-		}
-	}
-
-	public synchronized void scheduleSFJ() {
-
-		if (!this.isRunning) {
-			System.out.println("Core.CPU IS NOT RUNNING");
-			return;
-		}
-
-		if (taskLinkedQueue.isEmpty()) {
-			System.out.println("taskLinkedQueue is empty");
-			return;
-		}
-
-		LinkedOrderedList<Core.Task> taskLinkedOrderedList = new LinkedOrderedList<Core.Task>();
-		Core.Task nextTask = null;
-
-		while (!this.taskLinkedQueue.isEmpty()) {
-			try {
-				nextTask = this.taskLinkedQueue.dequeue();
-				nextTask.setStatus(Enums.Status.READY);
-
-				System.out.println("TASK " + nextTask.getName() +
-					" is " + nextTask.getStatus() +
-					" with a duration: " + nextTask.getDuration() + "ms");
-
-				taskLinkedOrderedList.add(nextTask);
-			} catch (EmptyCollectionException | NotElementComparableException e) {
-				System.err.println(e.getMessage());
-			}
-		}
-
-		Iterator<Core.Task> taskLinkedOrderedListIterator = taskLinkedOrderedList.iterator();
-
-		while (taskLinkedOrderedListIterator.hasNext()) {
-			nextTask = taskLinkedOrderedListIterator.next();
-			taskLinkedOrderedListIterator.remove();
-			System.out.println("TASK " + nextTask.getName() +
-				" is " + nextTask.getStatus());
-			cpu.executeTaskDuration(nextTask, nextTask.getDuration());
-		}
-	}
-
-	public synchronized void scheduleRR() {
-
-		if (!this.isRunning) {
-			System.out.println("Core.CPU IS NOT RUNNING");
-			return;
-		}
-
-		if (taskLinkedQueue.isEmpty()) {
-			System.out.println("taskLinkedQueue is empty");
-			return;
-		}
-
-		Core.Task nextTask = null;
-
-		while (!taskLinkedQueue.isEmpty()) {
-			try {
-				nextTask = taskLinkedQueue.dequeue();
-				nextTask.setStatus(Enums.Status.RUNNING);
-				System.out.println("TASK " + nextTask.getName() + " is " + nextTask.getStatus());
-
-				long duration = Math.min(cpu.getTIMESLICE(), nextTask.getDuration());
-
-				cpu.executeTaskDuration(nextTask, duration);
-
-				nextTask.setDuration(nextTask.getDuration() - duration);
-
-				if (nextTask.getDuration() == 0) {
-					nextTask.setStatus(Enums.Status.COMPLETED);
-
-				} else {
-					nextTask.setStatus(Enums.Status.READY);
-					taskLinkedQueue.enqueue(nextTask);
-				}
-
-			} catch (EmptyCollectionException e) {
-				System.err.println(e.getMessage());
-			}
-		}
-	}
-*/
