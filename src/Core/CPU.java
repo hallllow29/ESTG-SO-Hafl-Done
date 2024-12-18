@@ -3,12 +3,44 @@ package Core;
 import Enums.CPUState;
 import Enums.Status;
 
+/**
+ * The CPU class represents the central processing unit responsible for executing Tasks in a system.
+ * It maintains its current state, availability, and tracks the number of completed tasks.
+ */
 public class CPU {
 
-	private CPUState state; // Estado da CPU (RUNNING, STOPPED, etc.)
-	private boolean isAvailable; // Define se a CPU está disponível
-	private int completedTasks; // Contador de tarefas concluídas
+	/**
+	 * Represents the current operational state of the CPU.
+	 * Used to indicate whether the CPU is in an IDLE, RUNNING, or STOPPED state.
+	 * This field is managed internally to track and control CPU behavior during task execution.
+	 *
+	 * @see CPUState
+	 * @see CPU#getState()
+	 */
+	private CPUState state;
 
+	/**
+	 * Represents the availability status of the CPU.
+	 * The field indicates whether the CPU is currently available to execute tasks.
+	 *
+	 * True indicates the CPU is available, and false indicates the CPU is busy processing.
+	 */
+	private boolean isAvailable;
+
+	/**
+	 * The number of tasks successfully completed by the CPU.
+	 * This field keeps track of how many tasks have been executed to completion while the CPU was in the RUNNING state.
+	 * It is incremented whenever a task finishes its execution without being interrupted or paused.
+	 */
+	private int completedTasks;
+
+	/**
+	 * Constructs a new CPU instance.
+	 *
+	 * The CPU is initialized with its state set to STOPPED, available status set to true,
+	 * and the number of completed tasks set to zero. Additionally, a log entry is created
+	 * to indicate that the CPU has been initialized with default values.
+	 */
 	public CPU() {
 		this.state = CPUState.STOPPED;
 		this.isAvailable = true;
@@ -16,10 +48,30 @@ public class CPU {
 		Logger.log("CPU INITIALIZED - STATE: STOPPED, AVAILABLE: TRUE");
 	}
 
+	/**
+	 * Checks whether the CPU is currently available for executing tasks.
+	 *
+	 * @return true if the CPU is available, false otherwise.
+	 */
 	public synchronized boolean isAvailable() {
 		return this.isAvailable;
 	}
 
+	/**
+	 * Starts the CPU if it is not already in the RUNNING state.
+	 *
+	 * When invoked, this method checks the current state of the CPU.
+	 * If the CPU is already in the RUNNING state, it logs an informational
+	 * message indicating that the CPU is already started and takes no further action.
+	 *
+	 * If the CPU is not in the RUNNING state, this method transitions the
+	 * state of the CPU to RUNNING, sets its availability flag to true, and logs
+	 * messages to record the start event. Both log entries and console outputs
+	 * are generated to provide information about the transition.
+	 *
+	 * This method is thread-safe and ensures synchronized access to the
+	 * state of the CPU when starting it.
+	 */
 	public synchronized void start() {
 		if (this.state == CPUState.RUNNING) {
 			Logger.log("CPU ALREADY STARTED");
@@ -35,6 +87,18 @@ public class CPU {
 		System.out.println("[" + System.currentTimeMillis() + "] CPU STARTED");
 	}
 
+	/**
+	 * Stops the CPU if it is not already in the STOPPED state.
+	 *
+	 * This method checks the current state of the CPU and performs the following steps:
+	 * - If the CPU is already in the STOPPED state, it logs and outputs a message indicating
+	 *   that the CPU is already stopped, and exits without taking further action.
+	 * - If the CPU is not in the STOPPED state, it transitions the CPU state to STOPPED,
+	 *   sets its availability flag to false, and logs and outputs messages to record the stop event.
+	 *
+	 * This method is thread-safe, ensuring synchronized access to the state of the CPU
+	 * during the stopping process.
+	 */
 	public synchronized void stop() {
 		if (this.state == CPUState.STOPPED) {
 			Logger.log("CPU ALREADY STOPPED");
@@ -50,6 +114,17 @@ public class CPU {
 		System.out.println("[" + System.currentTimeMillis() + "] CPU STOPPED");
 	}
 
+	/**
+	 * Executes a specified task for a given duration if the CPU is in a running state.
+	 * The method ensures that only one task can be executed at a time due to synchronization.
+	 * It logs the task execution progress, handles interruptions, and sets the task's status
+	 * accordingly. The method also ensures the CPU's availability state is updated during
+	 * task execution.
+	 *
+	 * @param task The task to be executed. Must not be null.
+	 * @param duration The duration for which the task should be executed (in milliseconds).
+	 *                 Must be a positive value.
+	 */
 	private synchronized void runTask(Task task, long duration) {
 		if (task == null) {
 			System.out.println("[" + System.currentTimeMillis() + "] TASK CANNOT BE NULL");
