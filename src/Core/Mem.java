@@ -244,40 +244,6 @@ public class Mem {
         logger.info("======================================================\n");
     }
 
-
-   /* private boolean validateMemoryState(Task task) {
-        if (!isRunning) {
-            logger.warning("MEMORY IS NOT RUNNING");
-            return false;
-        }
-        if (task.getMemorySize() <= 0) {
-            logger.warning("INVALID MEMORY SIZE FOR TASK");
-            return false;
-        }
-        if (!hasAvailableMemory(task.getMemorySize())) {
-            logger.warning("INSUFFICIENT MEMORY FOR TASK " + task.getName());
-            return false;
-        }
-        return true;
-    }
-
-    private void allocateMemoryBlock(Task task, MemoryBlock block) {
-        try {
-            int startAddress = block.getStartAddress();
-            MemoryBlock newBlock = new MemoryBlock(task.getName(), startAddress, task.getMemorySize());
-            memoryBlocks.put(newBlock.getId(), newBlock);
-            totalMemoryUsed += newBlock.getSize();
-
-            block.setSize(block.getSize() - task.getMemorySize());
-            if (block.getSize() == 0) memoryFree.remove(block);
-
-            logger.info("Memory allocated for task " + task.getName() + " at address " + startAddress);
-            printMemoryStatus();
-        } catch (Exception e) {
-            logger.severe("Error allocating memory block: " + e.getMessage());
-        }
-    }*/
-
     /**
      * Merges adjacent free memory blocks into a single larger block to optimize memory usage.
      *

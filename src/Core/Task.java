@@ -2,8 +2,6 @@ package Core;
 
 import Enums.Priority;
 import Enums.Status;
-import lib.exceptions.ElementNotFoundException;
-import lib.exceptions.EmptyCollectionException;
 import lib.lists.LinkedUnorderedList;
 
 import java.util.ArrayList;
@@ -162,12 +160,15 @@ public class Task implements Comparable<Task> {
 		this.status = status;
 	}
 
-
 	/**
-	 * Compara as tarefas com base na prioridade.
+	 * Compares this task with the specified task based on their priority levels.
+	 * The comparison is determined by the ordinal values of the priorities, where
+	 * a lower ordinal value signifies a higher priority.
 	 *
-	 * @param other Outra tarefa a ser comparada.
-	 * @return Valor da comparação.
+	 * @param other The task to be compared with this task.
+	 *              It must not be null and should contain a valid priority level.
+	 * @return A negative integer, zero, or a positive integer as this task's
+	 *         priority is higher than, equal to, or lower than the specified task's priority.
 	 */
 	@Override
 	public int compareTo(Task other) {
@@ -175,7 +176,12 @@ public class Task implements Comparable<Task> {
 	}
 
 	/**
-	 * Representação em String para debug e visualização.
+	 * Generates a string representation of the Task object.
+	 * The string includes the task's name, priority, duration in milliseconds,
+	 * memory size in megabytes, current status, and associated devices.
+	 *
+	 * @return A string representation of the Task object, containing values of
+	 *         the task's attributes in a formatted structure.
 	 */
 	@Override
 	public String toString() {

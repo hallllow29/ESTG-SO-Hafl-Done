@@ -8,15 +8,32 @@ package Core;
  */
 public class CreepingSystem implements Runnable {
 
-	private static final int THREAD_SLEEP_TIME = 1000; // Tempo de espera no loop (ms)
-	private final Kernel kernel;                      // Instância do Kernel
-	private Thread thread;                            // Thread principal do sistema
-	private volatile boolean isRunning;               // Estado de execução do sistema
+	/**
+	 * The duration, in milliseconds, for which the current thread will pause its execution
+	 * during various operations within the CreepingSystem.
+	 *
+	 * The value is fixed and should not be modified to maintain consistent system behavior.
+	 */
+	private static final int THREAD_SLEEP_TIME = 1000;
 
 	/**
-	 * Construtor do sistema CreepingSystem.
+	 * The `kernel` field represents the core processing unit or computational
+	 * engine utilized by the `CreepingSystem`.
 	 *
-	 * @param kernel Instância do kernel.
+	 * The `kernel` is used internally by the `CreepingSystem` to coordinate tasks,
+	 * perform operations, and facilitate the execution lifecycle defined by the
+	 * `start`, `stop`, and `run` methods.
+	 */
+	private final Kernel kernel;
+	private Thread thread;
+	private volatile boolean isRunning;
+
+	/**
+	 * Constructs a new CreepingSystem instance with the specified Kernel.
+	 *
+	 * @param kernel the Kernel instance to be used by this CreepingSystem.
+	 *               Must not be null.
+	 * @throws IllegalArgumentException if the kernel parameter is null.
 	 */
 	public CreepingSystem(Kernel kernel) {
 		if (kernel == null) {
@@ -27,7 +44,15 @@ public class CreepingSystem implements Runnable {
 	}
 
 	/**
-	 * Inicia o sistema CreepingSystem.
+	 * Starts the CreepingSystem instance and its associated thread.
+	 *
+	 * This method initializes and starts a separate thread to execute the CreepingSystem's
+	 * processing logic and invokes the start method of the underlying Kernel instance.
+	 *
+	 * Thread safety is ensured by synchronizing access to this method.
+	 *
+	 * Logging statements provide feedback on the progress of the operation, including timestamps
+	 * for system start and completion.
 	 */
 	public synchronized void start() {
 		if (this.isRunning) {
@@ -46,7 +71,17 @@ public class CreepingSystem implements Runnable {
 	}
 
 	/**
-	 * Para o sistema CreepingSystem.
+	 * Stops the CreepingSystem and its associated components in a synchronized manner.
+	 *
+	 * This method ensures that the CreepingSystem halts its processing safely, interrupting
+	 * and joining the internal thread if it is running. It also invokes the `stop` method
+	 * of the underlying Kernel instance to perform a complete shutdown of all related resources.
+	 *
+	 * Thread safety is guaranteed by synchronizing this method to prevent concurrent access,
+	 * ensuring a consistent state during the stop operation.
+	 *
+	 * Exceptions occurring during the thread termination process (specifically `InterruptedException`)
+	 * are caught and logged, maintaining system stability while re-interrupting the current thread.
 	 */
 	public synchronized void stop() {
 		if (!this.isRunning) {
@@ -72,7 +107,15 @@ public class CreepingSystem implements Runnable {
 	}
 
 	/**
-	 * Loop principal de execução do sistema.
+	 * Continuously executes the processing logic of the CreepingSystem in a separate thread
+	 * until the system is stopped or the thread is interrupted.
+	 *
+	 * Thread interruption is handled within the loop. If the thread is interrupted, an error
+	 * message is logged, and the current thread is re-interrupted to allow proper
+	 * shutdown or management by the calling code.
+	 *
+	 * This method is implemented as part of the `Runnable` interface to allow execution
+	 * on a separate thread. It relies on the `isRunning` flag to manage its execution state.
 	 */
 	@Override
 	public void run() {
@@ -88,9 +131,11 @@ public class CreepingSystem implements Runnable {
 	}
 
 	/**
-	 * Adiciona uma tarefa ao Kernel.
+	 * Adds the specified task to the CreepingSystem, ensuring it is valid and
+	 * handled by the underlying Kernel instance.
 	 *
-	 * @param task Tarefa a ser adicionada.
+	 * @param task the Task object to be added. Must not be null.
+	 * @throws IllegalArgumentException if the task is null.
 	 */
 	public void addTask(Task task) {
 		if (task == null) {

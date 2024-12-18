@@ -11,16 +11,6 @@ public class Devices {
     /**
      * A map storing devices where the key represents the unique name of the device
      * and the value is the corresponding {@code Device} instance.
-     *
-     * This map is primarily used to manage and control the collection of devices,
-     * providing methods to initialize, start, stop, check availability, request usage,
-     * release usage, and list the current state of devices.
-     *
-     * The key in this map is the unique identifier {@code String} for each device,
-     * which prevents duplicate entries and facilitates quick lookup operations.
-     * The value is the {@code Device} object representing the specific hardware device
-     * along with its properties and state.
-     *
      * The collection supports synchronized operations to ensure thread-safety when performing
      * actions on devices in multi-threaded environments.
      */
@@ -28,13 +18,6 @@ public class Devices {
 
     /**
      * Indicates whether the devices in the system are currently running.
-     *
-     * This variable acts as a flag for tracking the operational state of the devices.
-     * It is used by various methods in the class to determine whether device-related
-     * operations, such as starting or stopping devices, should proceed.
-     *
-     * When set to {@code true}, the devices are considered to be operational (running).
-     * When set to {@code false}, the devices are not operational (stopped).
      */
     private boolean isRunning;
 
@@ -43,7 +26,6 @@ public class Devices {
      * running state to false. This constructor also attempts to initialize devices by invoking
      * the `initDevices` method. If device initialization fails due to an empty collection,
      * an error message is printed to the standard error stream.
-     *
      * The created instance is ready to manage connected devices through its methods, either
      * starting them, stopping them, or verifying their status.
      */
@@ -77,7 +59,6 @@ public class Devices {
     /**
      * Starts all devices managed by the `Devices` class. This method ensures that the devices are
      * only started if they are not already running.
-     *
      * If the devices are already running, a message indicating this state is logged, and the method
      * terminates without any further action. Otherwise, the method initializes the starting sequence
      * by connecting all available devices and marking the `isRunning` flag as true, showing that the
@@ -103,11 +84,9 @@ public class Devices {
 
     /**
      * Stops the operation of all devices managed by the {@code Devices} instance.
-     *
      * This method ensures that the devices are stopped only if they are currently running.
      * If the devices are not in a running state, a message will be logged indicating
      * that they are already stopped, and no further action will be taken.
-     *
      * Thread-safety is guaranteed by the synchronized modifier, ensuring that only
      * one thread can execute this method at a time.
      */
